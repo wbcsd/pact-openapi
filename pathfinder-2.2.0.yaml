@@ -1,0 +1,776 @@
+openapi: 3.1.0
+info:
+  title: pathfinder-2.2.0
+  version: 2.2.0
+  summary: Technical Specifications for PCF Data Exchange (Version 2.2.0)
+  termsOfService: 'https://wbcsd.github.io/tr/2024/data-exchange-protocol-20240410/'
+  description: 'Technical foundation for the Pathfinder Network, an open and global network for emission data exchange.'
+servers:
+  - url: 'https://example.com'
+paths:
+  /2/footprints:
+    get:
+      summary: Action ListFootprints
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProductFootprint'
+                required:
+                  - data
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProductFootprint'
+                required:
+                  - data
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenExpiredErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessDeniedErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalErrorResponse'
+      operationId: list-footprints
+      security:
+        - BearerToken: []
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: $filter
+          description: OData v4
+        - schema:
+            type: string
+            pattern: '^[0-9]+$'
+          in: query
+          name: limit
+      description: Lists product footprints with pagination and optional filtering.
+  '/2/footprints/{PfId}':
+    parameters:
+      - schema:
+          type: string
+          format: uuid
+        name: PfId
+        in: path
+        required: true
+    get:
+      summary: Action GetFootprint
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProductFootprint'
+                required:
+                  - data
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenExpiredErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessDeniedErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoSuchFootprintErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalErrorResponse'
+      operationId: get-footprints
+      security:
+        - BearerToken: []
+      description: Retrieves product footprints.
+  /2/events:
+    post:
+      summary: Action Events
+      operationId: post-events
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenExpiredErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessDeniedErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoSuchFootprintErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalErrorResponse'
+      description: The Action Events enables the exchange of event data between data owners and data recipients.
+      security:
+        - BearerToken: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/PublishedEvent'
+                - $ref: '#/components/schemas/CreatedEvent'
+                - $ref: '#/components/schemas/FulfilledEvent'
+                - $ref: '#/components/schemas/RejectedEvent'
+          application/ogg:
+            schema:
+              type: object
+              properties: {}
+components:
+  schemas:
+    ProductFootprint:
+      title: ProductFootprint
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        specVersion:
+          type: string
+          pattern: '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9]{8})*$'
+        precedingPfIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        version:
+          type: number
+        created:
+          type: string
+          format: date-time
+        updated:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+            - Active
+            - Deprecated
+        statusComment:
+          type: string
+        validityPeriodStart:
+          type: string
+          format: date-time
+        validityPeriodEnd:
+          type: string
+          format: date-time
+        companyName:
+          type: string
+        companyIds:
+          type: array
+          items:
+            type: string
+            pattern: '^urn:[a-zA-Z0-9]+([-a-zA-Z0-9]*){0,30}[a-zA-Z0-9]+:[-\._~%!$&''\(\)*+,;:@=a-zA-Z0-9]*[-\._~%!$&''\(\)*+,;:@=/?a-zA-Z0-9]*$'
+        productDescription:
+          type: string
+        productIds:
+          type: array
+          items:
+            type: string
+            pattern: '^urn:[a-zA-Z0-9]+([-a-zA-Z0-9]*){0,30}[a-zA-Z0-9]+:[-\._~%!$&''\(\)*+,;:@=a-zA-Z0-9]*[-\._~%!$&''\(\)*+,;:@=/?a-zA-Z0-9]*$'
+        productCategoryCpc:
+          type: string
+          pattern: '^[0-9]{0,5}(\.[0-9]{1,2})*$'
+        productNameCompany:
+          type: string
+        comment:
+          type: string
+        pcf:
+          $ref: '#/components/schemas/CarbonFootprint'
+        extensions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataModelExtension'
+      required:
+        - id
+        - specVersion
+        - version
+        - created
+        - status
+        - companyName
+        - companyIds
+        - productDescription
+        - productIds
+        - productCategoryCpc
+        - productNameCompany
+        - comment
+        - pcf
+    CarbonFootprint:
+      title: CarbonFootprint
+      type: object
+      properties:
+        declaredUnit:
+          type: string
+          enum:
+            - liter
+            - kilogram
+            - cubic meter
+            - kilowatt hour
+            - megajoule
+            - ton kilometer
+            - square meter
+        unitaryProductAmount:
+          type: string
+          pattern: '^[0-9]+(\.[0-9]+)*$'
+        pCfExcludingBiogenic:
+          type: string
+          pattern: '^[0-9]+(\.[0-9]+)*$'
+        pCfIncludingBiogenic:
+          type: string
+          pattern: '^[0-9]+(\.[0-9]+)*$'
+        fossilGhgEmissions:
+          type: string
+          pattern: '^[0-9]+(\.[0-9]+)*$'
+        fossilCarbonContent:
+          type: string
+          pattern: '^[0-9]+(\.[0-9]+)*$'
+        biogenicCarbonContent:
+          type: string
+          pattern: '^[0-9]+(\.[0-9]+)*$'
+        dLucGhgEmissions:
+          type: string
+          pattern: '^[0-9]+(\.[0-9]+)*$'
+        landManagementGhgEmissions:
+          type: string
+          pattern: '^[0-9]+(\.[0-9]+)*$'
+        otherBiogenicGhgEmissions:
+          type: string
+          pattern: '^[0-9]+(\.[0-9]+)*$'
+        iLucGhgEmissions:
+          type: string
+          pattern: '^[0-9]+(\.[0-9]+)*$'
+        biogenicCarbonWithdrawal:
+          type: string
+          pattern: '^[0-9]+(\.[0-9]+)*$'
+        aircraftGhgEmissions:
+          type: string
+          pattern: '^[0-9]+(\.[0-9]+)*$'
+        characterizationFactors:
+          type: string
+          enum:
+            - AR6
+            - AR5
+        ipccCharacterizationFactorsSources:
+          type: array
+          items:
+            type: string
+            pattern: '^AR[0-9]{1,}$'
+        crossSectoralStandardsUsed:
+          type: array
+          items:
+            type: string
+            enum:
+              - GHG Protocol Product standard
+              - ISO Standard 14067
+              - ISO Standard 14044
+        productOrSectorSpecificRules:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ProductOrSectorSpecificRule'
+        biogenicAccountingMethodology:
+          type: string
+          enum:
+            - PEF
+            - ISO
+            - GHGP
+            - Quantis
+        boundaryProcessesDescription:
+          type: string
+        referencePeriodStart:
+          type: string
+          format: date-time
+        referencePeriodEnd:
+          type: string
+          format: date-time
+        geographyCountrySubdivision:
+          type: string
+          pattern: '^[A-Z]{2}-[A-Z0-9]{1,3}$'
+          description: ISO 3166-2
+        geographyCountry:
+          type: string
+          pattern: '^[A-Z]{2}$'
+          description: ISO 3166-1
+        geographyRegionOrSubregion:
+          type: string
+          enum:
+            - Africa
+            - Americas
+            - Asia
+            - Europe
+            - Oceania
+            - Australia and New Zealand
+            - Central Asia
+            - Eastern Asia
+            - Eastern Europe
+            - Latin America and the Caribbean
+            - Melanesia
+            - Micronesia
+            - Northern Africa
+            - Northern America
+            - Northern Europe
+            - Polynesia
+            - South-eastern Asia
+            - Southern Asia
+            - Southern Europe
+            - Sub-Saharan Africa
+            - Western Asia
+            - Western Europe
+        secondaryEmissionFactorSources:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/EmissionFactorDS'
+        exemptedEmissionsPercent:
+          type: number
+          minimum: 0
+          maximum: 5
+        exemptedEmissionsDescription:
+          type: string
+        packagingEmissionsIncluded:
+          type: boolean
+        packagingGhgEmissions:
+          type: string
+          pattern: '^[0-9]+(\.[0-9]+)*$'
+        allocationRulesDescription:
+          type: string
+        uncertaintyAssessmentDescription:
+          type: string
+        primaryDataShare:
+          type: number
+          minimum: 0
+          maximum: 100
+        dqi:
+          $ref: '#/components/schemas/DataQualityIndicators'
+        assurance:
+          $ref: '#/components/schemas/Assurance'
+      required:
+        - declaredUnit
+        - unitaryProductAmount
+        - pCfExcludingBiogenic
+        - fossilGhgEmissions
+        - fossilCarbonContent
+        - biogenicCarbonContent
+        - characterizationFactors
+        - ipccCharacterizationFactorsSources
+        - crossSectoralStandardsUsed
+        - boundaryProcessesDescription
+        - referencePeriodStart
+        - referencePeriodEnd
+        - exemptedEmissionsPercent
+        - exemptedEmissionsDescription
+        - packagingEmissionsIncluded
+    ProductOrSectorSpecificRule:
+      title: ProductOrSectorSpecificRule
+      type: object
+      properties:
+        operator:
+          type: string
+          enum:
+            - PEF
+            - EPD International
+            - Other
+        ruleNames:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        otherOperatorName:
+          type: string
+          minLength: 1
+      required:
+        - operator
+        - ruleNames
+    EmissionFactorDS:
+      title: EmissionFactorDS
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        version:
+          type: string
+          minLength: 1
+      required:
+        - name
+        - version
+    DataQualityIndicators:
+      title: DataQualityIndicators
+      type: object
+      properties:
+        coveragePercent:
+          type: number
+          maximum: 100
+          exclusiveMinimum: 5
+        technologicalDQR:
+          type: number
+          minimum: 1
+          maximum: 3
+        temporalDQR:
+          type: number
+          minimum: 1
+          maximum: 3
+        geographicalDQR:
+          type: number
+          minimum: 1
+          maximum: 3
+        completenessDQR:
+          type: number
+          minimum: 1
+          maximum: 3
+        reliabilityDQR:
+          type: number
+          minimum: 1
+          maximum: 3
+      required:
+        - coveragePercent
+        - technologicalDQR
+        - temporalDQR
+        - geographicalDQR
+        - completenessDQR
+        - reliabilityDQR
+    Assurance:
+      title: Assurance
+      type: object
+      properties:
+        assurance:
+          type: boolean
+        coverage:
+          type: string
+          enum:
+            - corporate level
+            - product line
+            - PCF system
+            - product level
+        level:
+          type: string
+          enum:
+            - 'limited '
+            - reasonable
+        boundary:
+          type: string
+          enum:
+            - Gate-to-Gate
+            - Cradle-to-Gate
+        providerName:
+          type: string
+        completedAt:
+          type: string
+          format: date-time
+        standardName:
+          type: string
+        comments:
+          type: string
+      required:
+        - assurance
+        - providerName
+    DataModelExtension:
+      title: DataModelExtension
+      type: object
+      properties:
+        specVersion:
+          type: string
+          pattern: '^[0-9]{1,}\.[0-9]{1,}\.[0-9]{1,}$'
+        dataSchema:
+          type: string
+          pattern: '^https?:\/\/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$'
+        documentation:
+          type: string
+          pattern: '^https?:\/\/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$'
+        data:
+          type: object
+      required:
+        - specVersion
+        - dataSchema
+        - data
+    PublishedEvent:
+      title: PublishedEvent
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - org.wbcsd.pathfinder.ProductFootprint.Published.v1
+        specversion:
+          type: string
+        id:
+          type: string
+          format: uuid
+        source:
+          type: string
+          pattern: '^https?:\/\/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$'
+        time:
+          type: string
+          format: date-time
+        data:
+          type: object
+          required:
+            - pf
+          properties:
+            pfIds:
+              type: array
+              items:
+                type: string
+                format: uuid
+      required:
+        - type
+        - specversion
+        - id
+        - source
+        - time
+        - data
+    CreatedEvent:
+      title: CreatedEvent
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - org.wbcsd.pathfinder.ProductFootprintRequest.Created.v1
+        specversion:
+          type: string
+        id:
+          type: string
+          format: uuid
+        source:
+          type: string
+          pattern: '^https?:\/\/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$'
+        time:
+          type: string
+          format: date-time
+        data:
+          type: object
+          required:
+            - pf
+          properties:
+            pf:
+              type: object
+              format: uuid
+            comment:
+              type: string
+      required:
+        - type
+        - specversion
+        - id
+        - source
+        - time
+        - data
+    FulfilledEvent:
+      title: FulfilledEvent
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - org.wbcsd.pathfinder.ProductFootprintRequest.Fulfilled.v1
+        specversion:
+          type: string
+        id:
+          type: string
+          format: uuid
+        source:
+          type: string
+          pattern: '^https?:\/\/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$'
+        time:
+          type: string
+          format: date-time
+        data:
+          type: object
+          required:
+            - requestEventId
+          properties:
+            requestEventId:
+              type: string
+              format: uuid
+            pfs:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProductFootprint'
+      required:
+        - type
+        - specversion
+        - id
+        - source
+        - time
+        - data
+    RejectedEvent:
+      title: RejectedEvent
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - org.wbcsd.pathfinder.ProductFootprintRequest.Rejected.v1
+        specversion:
+          type: string
+        id:
+          type: string
+          format: uuid
+        source:
+          type: string
+          pattern: '^https?:\/\/[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$'
+        time:
+          type: string
+          format: date-time
+        data:
+          type: object
+          required:
+            - requestEventId
+          properties:
+            requestEventId:
+              type: string
+              format: uuid
+            error:
+              type: object
+      required:
+        - specversion
+        - id
+        - source
+        - time
+        - data
+    AccessDeniedErrorResponse:
+      title: AccessDeniedErrorResponse
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+            - AccessDenied
+        message:
+          type: string
+      required:
+        - code
+        - message
+    BadRequestErrorResponse:
+      title: BadRequestErrorResponse
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+            - BadRequest
+            - NotImplemented
+        message:
+          type: string
+      required:
+        - code
+        - message
+    NoSuchFootprintErrorResponse:
+      title: NoSuchFootprintErrorResponse
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+            - NoSuchFootprint
+        message:
+          type: string
+      required:
+        - code
+        - message
+    TokenExpiredErrorResponse:
+      title: TokenExpiredErrorResponse
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+            - TokenExpired
+        message:
+          type: string
+      required:
+        - code
+        - message
+    InternalErrorResponse:
+      title: InternalErrorResponse
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+            - InternalError
+        message:
+          type: string
+      required:
+        - code
+        - message
+  securitySchemes:
+    BearerToken:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /auth/token
+          refreshUrl: ''
+          scopes: {}
