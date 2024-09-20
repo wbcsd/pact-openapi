@@ -204,7 +204,7 @@
           "precedingPfIds": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/NonEmptyPfIdVec"
+              "$ref": "#/components/schemas/NonEmptyPfIdVec"
               }
             ],
             "nullable": true
@@ -321,38 +321,6 @@
       "CarbonFootprint": {
         "description": "Data Type \"CarbonFootprint\" of Spec Version 2",
         "type": "object",
-        "anyOf": [
-          {
-            "type": "null"
-          },
-          {
-            "type": "object",
-            "required": ["geographyRegionOrSubregion"],
-            "properties": {
-              "geographyRegionOrSubregion": {
-                "$ref": "#/components/schemas/UNRegionOrSubregion"
-              }
-            }
-          },
-          {
-            "type": "object",
-            "required": ["geographyCountry"],
-            "properties": {
-              "geographyCountry": {
-                "$ref": "#/components/schemas/ISO3166CC"
-              }
-            }
-          },
-          {
-            "type": "object",
-            "required": ["geographyCountrySubdivision"],
-            "properties": {
-              "geographyCountrySubdivision": {
-                "$ref": "#/components/schemas/NonEmptyString"
-              }
-            }
-          }
-        ],
         "required": [
           "biogenicCarbonContent",
           "boundaryProcessesDescription",
@@ -371,37 +339,58 @@
           "referencePeriodStart",
           "unitaryProductAmount"
         ],
+        "oneOf": [
+            { "oneOf": [
+              { "required": ["geographyRegionOrSubregion"] },
+              { "required": ["geographyCountry"] },
+              { "required": ["geographyCountrySubdivision"] }
+              ] },
+            { "not": { "anyOf": [
+              { "required": ["geographyRegionOrSubregion"] },
+              { "required": ["geographyCountry"] },
+              { "required": ["geographyCountrySubdivision"] }
+              ] } }
+        ],
         "properties": {
+          "geographyRegionOrSubregion": {
+            "$ref": "#/components/schemas/UNRegionOrSubregion"
+          },
+          "geographyCountry": {
+            "$ref": "#/components/schemas/ISO3166CC"
+          },
+          "geographyCountrySubdivision": {
+            "$ref": "#/components/schemas/NonEmptyString"
+          },
           "declaredUnit": {
             "$ref": "#/components/schemas/DeclaredUnit"
           },
           "unitaryProductAmount": {
-            "$ref": "#/components/schemas/StrictlyPositiveDecimal"
+            "$ref": "#/components/schemas/PositiveNonZeroDecimal"
           },
           "pCfExcludingBiogenic": {
-            "$ref": "#/components/schemas/PositiveDecimal"
+            "$ref": "#/components/schemas/PositiveOrZeroDecimal"
           },
           "pCfIncludingBiogenic": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Decimal"
-              }
+            "allOf": [ 
+              { 
+                "$ref": "#/components/schemas/Decimal" 
+              } 
             ],
             "nullable": true
           },
           "fossilGhgEmissions": {
-            "$ref": "#/components/schemas/PositiveDecimal"
+            "$ref": "#/components/schemas/PositiveOrZeroDecimal"
           },
           "fossilCarbonContent": {
-            "$ref": "#/components/schemas/PositiveDecimal"
+            "$ref": "#/components/schemas/PositiveOrZeroDecimal"
           },
           "biogenicCarbonContent": {
-            "$ref": "#/components/schemas/PositiveDecimal"
+            "$ref": "#/components/schemas/PositiveOrZeroDecimal"
           },
           "dLucGhgEmissions": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/PositiveDecimal"
+              "$ref": "#/components/schemas/PositiveOrZeroDecimal"
               }
             ],
             "nullable": true
@@ -409,7 +398,7 @@
           "landManagementGhgEmissions": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/PositiveDecimal"
+              "$ref": "#/components/schemas/PositiveOrZeroDecimal"
               }
             ],
             "nullable": true
@@ -417,7 +406,7 @@
           "otherBiogenicGhgEmissions": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/PositiveDecimal"
+              "$ref": "#/components/schemas/PositiveOrZeroDecimal"
               }
             ],
             "nullable": true
@@ -425,7 +414,7 @@
           "iLucGhgEmissions": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/PositiveDecimal"
+              "$ref": "#/components/schemas/PositiveOrZeroDecimal"
               }
             ],
             "nullable": true
@@ -433,7 +422,7 @@
           "biogenicCarbonWithdrawal": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/NegativeDecimal"
+              "$ref": "#/components/schemas/NegativeOrZeroDecimal"
               }
             ],
             "nullable": true
@@ -441,7 +430,7 @@
           "aircraftGhgEmissions": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/PositiveDecimal"
+              "$ref": "#/components/schemas/PositiveOrZeroDecimal" 
               }
             ],
             "nullable": true
@@ -461,7 +450,7 @@
           "biogenicAccountingMethodology": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/BiogenicAccountingMethodology"
+              "$ref": "#/components/schemas/BiogenicAccountingMethodology"
               }
             ],
             "nullable": true
@@ -480,7 +469,7 @@
           "secondaryEmissionFactorSources": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/EmissionFactorDSSet"
+            "$ref": "#/components/schemas/EmissionFactorDSSet"
               }
             ],
             "nullable": true
@@ -497,7 +486,7 @@
           "packagingGhgEmissions": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/PositiveDecimal"
+              "$ref": "#/components/schemas/PositiveOrZeroDecimal"
               }
             ],
             "nullable": true
@@ -513,7 +502,7 @@
           "primaryDataShare": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/Percent"
+              "$ref": "#/components/schemas/Percent"
               }
             ],
             "nullable": true
@@ -521,7 +510,7 @@
           "dqi": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/DataQualityIndicators"
+              "$ref": "#/components/schemas/DataQualityIndicators"
               }
             ],
             "nullable": true
@@ -529,7 +518,7 @@
           "assurance": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/Assurance"
+              "$ref": "#/components/schemas/Assurance"
               }
             ],
             "nullable": true
@@ -549,21 +538,25 @@
           "square meter"
         ]
       },
-      "StrictlyPositiveDecimal": {
+      "PositiveNonZeroDecimal": {
         "type": "string",
-        "pattern": "^(\\d*[1-9]\\d*([\\.]\\d+)?|\\d+(\\.\\d*[1-9]\\d*)?)$"
+        "pattern": "^[+]?(\\d*[1-9]\\d*)(\\.\\d+)?|(0+\\.\\d*[1-9]\\d*)$"
       },
-      "PositiveDecimal": {
+      "PositiveOrZeroDecimal": {
         "type": "string",
-        "pattern": "^\\d+(\\.\\d+)?$"
+        "pattern": "^[+]?\\d+(\\.\\d+)?$"
       },
       "Decimal": {
         "type": "string",
-        "pattern": "^-?\\d+(\\.\\d+)?$"
+        "pattern": "^[+-]?\\d+(\\.\\d+)?$"
       },
-      "NegativeDecimal": {
+      "NegativeOrZeroDecimal": {
         "type": "string",
-        "pattern": "^(-\\d+(\\.\\d+)?)|0$"
+        "pattern": "^(-\\d+(\\.\\d+)?)|0+(\\.0+)?$"
+      },
+      "NegativeNonZeroDecimal": {
+        "type": "string",
+        "pattern": "^-((\\d*[1-9]\\d*)(\\.\\d+)?|(0+\\.\\d*[1-9]\\d*))$"
       },
       "CharacterizationFactors": {
         "type": "string",
@@ -620,7 +613,7 @@
             "otherOperatorName": {
               "allOf": [
                 {
-                  "$ref": "#/components/schemas/NonEmptyString"
+              "$ref": "#/components/schemas/NonEmptyString"
                 }
               ],
               "nullable": true
@@ -642,7 +635,7 @@
           "otherOperatorName": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/NonEmptyString"
+              "$ref": "#/components/schemas/NonEmptyString"
               }
             ],
             "nullable": true
@@ -764,7 +757,7 @@
           "level": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/AssuranceLevel"
+              "$ref": "#/components/schemas/AssuranceLevel"
               }
             ],
             "nullable": true
@@ -772,7 +765,7 @@
           "boundary": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/AssuranceBoundary"
+              "$ref": "#/components/schemas/AssuranceBoundary"
               }
             ],
             "nullable": true
