@@ -1,24 +1,32 @@
-openapi: 3.0.0
+openapi: 3.1.0
 info:
   title: pathfinder-endpoint
   version: 2.2.1-wip1
 paths:
   /2/footprints/{id}:
     get:
-      operationId: get_pcf
+      summary: Action GetFootprint
+      operationId: get-footprint
       parameters:
       - name: id
         in: path
         required: true
         schema:
-          $ref: '#/components/schemas/PfId'
+          type: string
+          format: uuid
       responses:
         '200':
           description: ''
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductFootprintResponse'
+                description: HTTP Body of Action `GetFootprint`
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProductFootprint'
         '400':
           description: '# 400 Bad Request
 
@@ -31,7 +39,8 @@ paths:
       - BearerAuth: []
   /2/footprints:
     get:
-      operationId: get_footprints
+      summary: Action ListFootprints
+      operationId: list-footprints
       parameters:
       - name: limit
         in: query
@@ -40,7 +49,7 @@ paths:
           format: uint
           minimum: 0
           nullable: true
-      - name: $filter
+      - name: '$filter'
         in: query
         description: Syntax as defined by the ODatav4 specification
         allowEmptyValue: true
@@ -51,15 +60,21 @@ paths:
           description: ''
           headers:
             link:
-              description: Link header to next result set. See Tech Specs section
-                6.6.1
+              description: Link header to next result set. See Tech Specs section 6.6.1
               schema:
                 type: string
               example: https://api.example.com/2/footprints?[...]
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PfListingResponseInner'
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProductFootprint'
         '400':
           description: '# 400 Bad Request
 
@@ -107,42 +122,41 @@ paths:
       - BearerAuth: []
 components:
   schemas:
-    ProductFootprintResponse:
-      description: HTTP Body of Action `GetFootprint`
-      type: object
-      required:
-      - data
-      properties:
-        data:
-          $ref: '#/components/schemas/ProductFootprint'
     ProductFootprint:
       description: Data Type "ProductFootprint" of Tech Spec Version 2
       type: object
       required:
-      - comment
-      - companyIds
-      - companyName
-      - created
       - id
-      - pcf
-      - productCategoryCpc
+      - specVersion
+      - version
+      - created
+      - status
+      - comment
+      - companyName
+      - companyIds
       - productDescription
       - productIds
+      - productCategoryCpc
       - productNameCompany
-      - specVersion
-      - status
-      - version
+      - pcf
       properties:
         id:
-          $ref: '#/components/schemas/PfId'
+          type: string
+          format: uuid
         specVersion:
           $ref: '#/components/schemas/VersionString'
         precedingPfIds:
-          allOf:
-          - $ref: '#/components/schemas/NonEmptyPfIdVec'
-          nullable: true
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+          uniqueItems: true
         version:
-          $ref: '#/components/schemas/VersionInteger'
+          type: integer
+          format: int32
+          maximum: 2147483647
+          minimum: 0
         created:
           type: string
           format: date-time
@@ -151,7 +165,10 @@ components:
           format: date-time
           nullable: true
         status:
-          $ref: '#/components/schemas/PfStatus'
+          type: string
+          enum:
+            - Active
+            - Deprecated
         statusComment:
           type: string
           nullable: true
@@ -179,30 +196,10 @@ components:
           type: string
         pcf:
           $ref: '#/components/schemas/CarbonFootprint'
-    PfId:
-      type: string
-      format: uuid
     VersionString:
       type: string
       minLength: 5
-      pattern: ^\d+\.\d+\.\d+(-\d{8})?$
-    NonEmptyPfIdVec:
-      type: array
-      items:
-        type: string
-        format: uuid
-      minItems: 1
-      uniqueItems: true
-    VersionInteger:
-      type: integer
-      format: int32
-      maximum: 2147483647
-      minimum: 0
-    PfStatus:
-      type: string
-      enum:
-      - Active
-      - Deprecated
+      pattern: '^\d+\.\d+\.\d+(-\d{8})?$'
     NonEmptyString:
       type: string
       minLength: 1
@@ -273,9 +270,7 @@ components:
         pCfExcludingBiogenic:
           $ref: '#/components/schemas/PositiveOrZeroDecimal'
         pCfIncludingBiogenic:
-          allOf:
-          - $ref: '#/components/schemas/Decimal'
-          nullable: true
+          $ref: '#/components/schemas/Decimal'
         fossilGhgEmissions:
           $ref: '#/components/schemas/PositiveOrZeroDecimal'
         fossilCarbonContent:
@@ -283,29 +278,17 @@ components:
         biogenicCarbonContent:
           $ref: '#/components/schemas/PositiveOrZeroDecimal'
         dLucGhgEmissions:
-          allOf:
-          - $ref: '#/components/schemas/PositiveOrZeroDecimal'
-          nullable: true
+          $ref: '#/components/schemas/PositiveOrZeroDecimal'
         landManagementGhgEmissions:
-          allOf:
-          - $ref: '#/components/schemas/PositiveOrZeroDecimal'
-          nullable: true
+          $ref: '#/components/schemas/PositiveOrZeroDecimal'
         otherBiogenicGhgEmissions:
-          allOf:
-          - $ref: '#/components/schemas/PositiveOrZeroDecimal'
-          nullable: true
+          $ref: '#/components/schemas/PositiveOrZeroDecimal'
         iLucGhgEmissions:
-          allOf:
-          - $ref: '#/components/schemas/PositiveOrZeroDecimal'
-          nullable: true
+          $ref: '#/components/schemas/PositiveOrZeroDecimal'
         biogenicCarbonWithdrawal:
-          allOf:
-          - $ref: '#/components/schemas/NegativeOrZeroDecimal'
-          nullable: true
+          $ref: '#/components/schemas/NegativeOrZeroDecimal'
         aircraftGhgEmissions:
-          allOf:
-          - $ref: '#/components/schemas/PositiveOrZeroDecimal'
-          nullable: true
+          $ref: '#/components/schemas/PositiveOrZeroDecimal'
         characterizationFactors:
           $ref: '#/components/schemas/CharacterizationFactors'
         ipccCharacterizationFactorsSources:
@@ -315,9 +298,7 @@ components:
         productOrSectorSpecificRules:
           $ref: '#/components/schemas/ProductOrSectorSpecificRuleSet'
         biogenicAccountingMethodology:
-          allOf:
-          - $ref: '#/components/schemas/BiogenicAccountingMethodology'
-          nullable: true
+          $ref: '#/components/schemas/BiogenicAccountingMethodology'
         boundaryProcessesDescription:
           type: string
         referencePeriodStart:
@@ -327,9 +308,7 @@ components:
           type: string
           format: date-time
         secondaryEmissionFactorSources:
-          allOf:
-          - $ref: '#/components/schemas/EmissionFactorDSSet'
-          nullable: true
+          $ref: '#/components/schemas/EmissionFactorDSSet'
         exemptedEmissionsPercent:
           $ref: '#/components/schemas/ExemptedEmissionsPercent'
         exemptedEmissionsDescription:
@@ -337,9 +316,7 @@ components:
         packagingEmissionsIncluded:
           type: boolean
         packagingGhgEmissions:
-          allOf:
-          - $ref: '#/components/schemas/PositiveOrZeroDecimal'
-          nullable: true
+          $ref: '#/components/schemas/PositiveOrZeroDecimal'
         allocationRulesDescription:
           type: string
           nullable: true
@@ -347,17 +324,11 @@ components:
           type: string
           nullable: true
         primaryDataShare:
-          allOf:
-          - $ref: '#/components/schemas/Percent'
-          nullable: true
+          $ref: '#/components/schemas/Percent'
         dqi:
-          allOf:
-          - $ref: '#/components/schemas/DataQualityIndicators'
-          nullable: true
+          $ref: '#/components/schemas/DataQualityIndicators'
         assurance:
-          allOf:
-          - $ref: '#/components/schemas/Assurance'
-          nullable: true
+          $ref: '#/components/schemas/Assurance'
     DeclaredUnit:
       description: Data Type "DeclaredUnit" of Spec Version 2
       type: string
@@ -375,6 +346,7 @@ components:
     PositiveOrZeroDecimal:
       type: string
       pattern: ^[+]?\d+(\.\d+)?$
+      comment: A positive or zero decimal number.
     Decimal:
       type: string
       pattern: ^[+-]?\d+(\.\d+)?$
@@ -430,9 +402,9 @@ components:
           ruleNames:
             $ref: '#/components/schemas/NonEmptyStringVec'
           otherOperatorName:
-            allOf:
+            anyOf:
             - $ref: '#/components/schemas/NonEmptyString'
-            nullable: true
+            - type: 'null'
       uniqueItems: true
     ProductOrSectorSpecificRule:
       type: object
@@ -445,9 +417,9 @@ components:
         ruleNames:
           $ref: '#/components/schemas/NonEmptyStringVec'
         otherOperatorName:
-          allOf:
+          anyOf:
           - $ref: '#/components/schemas/NonEmptyString'
-          nullable: true
+          - type: 'null'
     ProductOrSectorSpecificRuleOperator:
       type: string
       enum:
@@ -540,17 +512,11 @@ components:
         assurance:
           type: boolean
         coverage:
-          allOf:
-          - $ref: '#/components/schemas/AssuranceCoverage'
-          nullable: true
+          $ref: '#/components/schemas/AssuranceCoverage'
         level:
-          allOf:
-          - $ref: '#/components/schemas/AssuranceLevel'
-          nullable: true
+          $ref: '#/components/schemas/AssuranceLevel'
         boundary:
-          allOf:
-          - $ref: '#/components/schemas/AssuranceBoundary'
-          nullable: true
+          $ref: '#/components/schemas/AssuranceBoundary'
         providerName:
           type: string
         completedAt:
@@ -620,16 +586,6 @@ components:
           type: string
         code:
           type: string
-    PfListingResponseInner:
-      description: HTTP Body of Action `ListFootprints`
-      type: object
-      required:
-      - data
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProductFootprint'
     AccessDenied:
       description: Response with an error code of `AccessDenied`. See Chapter "Error
         Codes" of the Tech Specs for mor details.
@@ -647,8 +603,8 @@ components:
         section 6 for details
       type: object
       oneOf:
-      - description: "the contents of the `data` field of a `PF Update Event` \u2013\
-          \ see Tech Specs section 6.8.3"
+      - description: "the contents of the `data` field of a `PF Update Event` – see
+          Tech Specs section 6.8.3"
         type: object
         required:
         - data
@@ -660,8 +616,8 @@ components:
             - org.wbcsd.pathfinder.ProductFootprint.Published.v1
           data:
             $ref: '#/components/schemas/PFUpdateEventBody'
-      - description: "the contents of the `data` field of a `PF Request Event` \u2013\
-          \ see Tech Specs section 6.8.4.1"
+      - description: "the contents of the `data` field of a `PF Request Event` – see
+          Tech Specs section 6.8.4.1"
         type: object
         required:
         - data
@@ -696,7 +652,8 @@ components:
         pfIds:
           type: array
           items:
-            $ref: '#/components/schemas/PfId'
+            type: string
+            format: uuid
     PFRequestEventBody:
       type: object
       required:
@@ -712,7 +669,7 @@ components:
       type: oauth2
       flows:
         clientCredentials:
-          tokenUrl: /auth/token
+          tokenUrl: '/2/auth/token'
           scopes:
             footprint:list: Ability to list footprints
             footprint:read: Ability to access individual footprints
