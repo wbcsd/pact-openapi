@@ -6,20 +6,28 @@ info:
 paths:
   '/2/footprints/{id}':
     get:
-      operationId: get_pcf
+      summary: Action GetFootprint
+      operationId: get-footprint
       parameters:
       - name: id
         in: path
         required: true
         schema:
-          $ref: '#/components/schemas/PfId'
+          type: string
+          format: uuid
       responses:
         '200':
           description: ''
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductFootprintResponse'
+                description: HTTP Body of Action `GetFootprint`
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProductFootprint'
         '400':
           description: "# 400 Bad Request\nThe request given is wrongly formatted
             or data was missing. "
@@ -31,7 +39,8 @@ paths:
       - BearerAuth: []
   '/2/footprints':
     get:
-      operationId: get_footprints
+      summary: Action ListFootprints
+      operationId: list-footprints
       parameters:
       - name: limit
         in: query
@@ -59,7 +68,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PfListingResponseInner'
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProductFootprint'
         '400':
           description: "# 400 Bad Request\nThe request given is wrongly formatted
             or data was missing. "
@@ -104,14 +120,6 @@ paths:
       - BearerAuth: []
 components:
   schemas:
-    ProductFootprintResponse:
-      description: HTTP Body of Action `GetFootprint`
-      type: object
-      required:
-      - data
-      properties:
-        data:
-          $ref: '#/components/schemas/ProductFootprint'
     ProductFootprint:
       description: Data Type "ProductFootprint" of Tech Spec Version 2
       type: object
@@ -131,15 +139,22 @@ components:
       - pcf
       properties:
         id:
-          $ref: '#/components/schemas/PfId'
+          type: string
+          format: uuid
         specVersion:
           $ref: '#/components/schemas/VersionString'
         precedingPfIds:
-          allOf:
-          - $ref: '#/components/schemas/NonEmptyPfIdVec'
-          nullable: true
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+          uniqueItems: true
         version:
-          $ref: '#/components/schemas/VersionInteger'
+          type: integer
+          format: int32
+          maximum: 2147483647
+          minimum: 0
         created:
           type: string
           format: date-time
@@ -148,7 +163,10 @@ components:
           format: date-time
           nullable: true
         status:
-          $ref: '#/components/schemas/PfStatus'
+          type: string
+          enum:
+            - Active
+            - Deprecated
         statusComment:
           type: string
           nullable: true
@@ -176,30 +194,10 @@ components:
           type: string
         pcf:
           $ref: '#/components/schemas/CarbonFootprint'
-    PfId:
-      type: string
-      format: uuid
     VersionString:
       type: string
       minLength: 5
-      pattern: '^\\d+\\.\\d+\\.\\d+(-\\d{8})?$'
-    NonEmptyPfIdVec:
-      type: array
-      items:
-        type: string
-        format: uuid
-      minItems: 1
-      uniqueItems: true
-    VersionInteger:
-      type: integer
-      format: int32
-      maximum: 2147483647
-      minimum: 0
-    PfStatus:
-      type: string
-      enum:
-      - Active
-      - Deprecated
+      pattern: '^\d+\.\d+\.\d+(-\d{8})?$'
     NonEmptyString:
       type: string
       minLength: 1
@@ -613,16 +611,6 @@ components:
           type: string
         code:
           type: string
-    PfListingResponseInner:
-      description: HTTP Body of Action `ListFootprints`
-      type: object
-      required:
-      - data
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/ProductFootprint'
     AccessDenied:
       description: Response with an error code of `AccessDenied`. See Chapter "Error
         Codes" of the Tech Specs for mor details.
