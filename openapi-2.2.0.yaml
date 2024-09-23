@@ -1,5 +1,5 @@
 ---
-openapi: 3.0.0
+openapi: 3.1.0
 info:
   title: pathfinder-endpoint
   version: 2.2.0-wip1
@@ -299,10 +299,15 @@ components:
         referencePeriodEnd:
           type: string
           format: date-time
-        geographicScope:
-          allOf:
-          - $ref: '#/components/schemas/GeographicScope'
-          nullable: true
+        geographyRegionOrSubregion:
+          description: Encoded geographic scope rules of a Spec Version 2 `CarbonFootprint`
+          $ref: '#/components/schemas/UNRegionOrSubregion'
+        geographyCountry:
+          description: Encoded geographic scope rules of a Spec Version 2 `CarbonFootprint`
+          $ref: '#/components/schemas/ISO3166CC'
+        geographyCountrySubdivision:
+          description: Encoded geographic scope rules of a Spec Version 2 `CarbonFootprint`
+          $ref: '#/components/schemas/NonEmptyString'
         secondaryEmissionFactorSources:
           allOf:
           - $ref: '#/components/schemas/EmissionFactorDSSet'
@@ -442,28 +447,6 @@ components:
       - ISO
       - GHPG
       - Quantis
-    GeographicScope:
-      description: Encoded geographic scope rules of a Spec Version 2 `CarbonFootprint`
-      anyOf:
-      - type: 'null'
-      - type: object
-        required:
-        - geographyRegionOrSubregion
-        properties:
-          geographyRegionOrSubregion:
-            $ref: '#/components/schemas/UNRegionOrSubregion'
-      - type: object
-        required:
-        - geographyCountry
-        properties:
-          geographyCountry:
-            $ref: '#/components/schemas/ISO3166CC'
-      - type: object
-        required:
-        - geographyCountrySubdivision
-        properties:
-          geographyCountrySubdivision:
-            $ref: '#/components/schemas/NonEmptyString'
     EmissionFactorDSSet:
       type: array
       items:
@@ -677,7 +660,8 @@ components:
         pfIds:
           type: array
           items:
-            $ref: '#/components/schemas/PfId'
+            type: string
+            format: uuid
     PFRequestEventBody:
       type: object
       required:
