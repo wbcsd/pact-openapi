@@ -1,10 +1,10 @@
 ---
 openapi: 3.1.0
 info:
-  title: pathfinder-endpoint
-  version: 2.2.0-wip1
+  title: PACT API Specification
+  version: 2.2.0
 paths:
-  '/2/footprints/{id}':
+  /2/footprints/{id}:
     get:
       summary: Action GetFootprint
       operationId: get-footprint
@@ -29,15 +29,14 @@ paths:
                   data:
                     $ref: '#/components/schemas/ProductFootprint'
         '400':
-          description: "# 400 Bad Request\nThe request given is wrongly formatted
-            or data was missing. "
+          description: The request given is wrongly formatted or data was missing.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BadRequest'
       security:
       - BearerAuth: []
-  '/2/footprints':
+  /2/footprints:
     get:
       summary: Action ListFootprints
       operationId: list-footprints
@@ -48,7 +47,6 @@ paths:
           type: integer
           format: uint
           minimum: 0
-          nullable: true
       - name: '$filter'
         in: query
         description: Syntax as defined by the ODatav4 specification
@@ -60,8 +58,7 @@ paths:
           description: ''
           headers:
             link:
-              description: Link header to next result set. See Tech Specs section
-                6.6.1
+              description: Link header to next result set. See Tech Specs section 6.6.1
               schema:
                 type: string
               example: https://api.example.com/2/footprints?[...]
@@ -77,15 +74,14 @@ paths:
                     items:
                       $ref: '#/components/schemas/ProductFootprint'
         '400':
-          description: "# 400 Bad Request\nThe request given is wrongly formatted
-            or data was missing. "
+          description: The request given is wrongly formatted or data was missing.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BadRequest'
       security:
       - BearerAuth: []
-  '/2/events':
+  /2/events:
     post:
       operationId: post_event
       requestBody:
@@ -97,8 +93,7 @@ paths:
         '200':
           description: ''
         '400':
-          description: "# 400 Bad Request\nThe request given is wrongly formatted
-            or data was missing. "
+          description: The request given is wrongly formatted or data was missing. "
           content:
             application/json:
               schema:

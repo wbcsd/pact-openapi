@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: pathfinder-endpoint
+  title: PACT API Specification
   version: 2.2.1-wip1
 paths:
   /2/footprints/{id}:
@@ -16,11 +16,10 @@ paths:
           format: uuid
       responses:
         '200':
-          description: ''
+          description: Success
           content:
             application/json:
               schema:
-                description: HTTP Body of Action `GetFootprint`
                 type: object
                 required:
                 - data
@@ -28,9 +27,7 @@ paths:
                   data:
                     $ref: '#/components/schemas/ProductFootprint'
         '400':
-          description: '# 400 Bad Request
-
-            The request given is wrongly formatted or data was missing. '
+          description: Bad request
           content:
             application/json:
               schema:
@@ -48,7 +45,6 @@ paths:
           type: integer
           format: uint
           minimum: 0
-          nullable: true
       - name: '$filter'
         in: query
         description: Syntax as defined by the ODatav4 specification
@@ -57,7 +53,7 @@ paths:
           type: string
       responses:
         '200':
-          description: ''
+          description: Success
           headers:
             link:
               description: Link header to next result set. See Tech Specs section 6.6.1
@@ -76,9 +72,7 @@ paths:
                     items:
                       $ref: '#/components/schemas/ProductFootprint'
         '400':
-          description: '# 400 Bad Request
-
-            The request given is wrongly formatted or data was missing. '
+          description: Bad request
           content:
             application/json:
               schema:
@@ -95,25 +89,21 @@ paths:
               $ref: '#/components/schemas/PathfinderEvent'
       responses:
         '200':
-          description: ''
+          description: Success
         '400':
-          description: '# 400 Bad Request
-
-            The request given is wrongly formatted or data was missing. '
+          description: Bad request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BadRequest'
         '403':
-          description: '# 403 Forbidden'
+          description: Forbidden
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AccessDenied'
         '501':
-          description: '# 501 Not Implemented
-
-            The request given is not implemented by the server. '
+          description: Not implemented.
           content:
             application/json:
               schema:
@@ -163,7 +153,6 @@ components:
         updated:
           type: string
           format: date-time
-          nullable: true
         status:
           type: string
           enum:
@@ -171,15 +160,12 @@ components:
             - Deprecated
         statusComment:
           type: string
-          nullable: true
         validityPeriodStart:
           type: string
           format: date-time
-          nullable: true
         validityPeriodEnd:
           type: string
           format: date-time
-          nullable: true
         companyName:
           $ref: '#/components/schemas/NonEmptyString'
         companyIds:
@@ -319,10 +305,8 @@ components:
           $ref: '#/components/schemas/PositiveOrZeroDecimal'
         allocationRulesDescription:
           type: string
-          nullable: true
         uncertaintyAssessmentDescription:
           type: string
-          nullable: true
         primaryDataShare:
           $ref: '#/components/schemas/Percent'
         dqi:
@@ -522,13 +506,10 @@ components:
         completedAt:
           type: string
           format: date-time
-          nullable: true
         standardName:
           type: string
-          nullable: true
         comments:
           type: string
-          nullable: true
     AssuranceCoverage:
       type: string
       enum:
@@ -662,7 +643,6 @@ components:
         pf: {}
         comment:
           type: string
-          nullable: true
   securitySchemes:
     BearerAuth:
       description: OAuth2 Client Credentials Grant (RFC6749 4.4)
