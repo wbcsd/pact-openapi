@@ -13,3 +13,6 @@ code (like sample implementations) but treated as standalone artefacts.
 
 These schemas will be kept in sync as we release new versions of the specification. Currently
 the following versions are available.
+
+## Status
+Current status is DRAFT. First complete version will accompany the PACT tech specs v2.3, ETA October 2024.
