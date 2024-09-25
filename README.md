@@ -3,7 +3,7 @@
 This repository contains the [OpenAPI](https://www.openapis.org) schemas for the 
 [Technical specifications for the PACT Network](https://github.com/wbcsd/data-exchange-protocol).
 
-They are originally based on the [demo-endpoint](https://github.com/wbcsd/demo-endpoint) by Sine and the [conformance test tool](https://github.com/mill6-plat6aux/pathfinder-testbed) by NRI.
+They are originally based on the [demo-endpoint](https://github.com/wbcsd/demo-endpoint) by SINE and the [conformance test tool](https://github.com/mill6-plat6aux/pathfinder-testbed) by NRI.
 
 ## Version and format
 
