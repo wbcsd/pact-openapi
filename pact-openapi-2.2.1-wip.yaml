@@ -1,43 +1,30 @@
 openapi: 3.1.0
 info:
   title: PACT API Specification
-  version: 2.2.1-wip1
+  summary: Technical Specifications for PCF Data Exchange (Version 2.2.1-wip)
+  version: 2.2.1-wip
+  contact: 
+    name: WBCSD PACT Project
+    url: https://github.com/wbcsd
+    email: pact@wbcsd.org
+  description: >
+    This document describes the technical specifications for the exchange of 
+    Product Carbon Footprint (PCF) data between systems. The specification is 
+    maintained by the WBCSD PACT project and  intended to be used by organizations 
+    that wish to exchange PCF data with other organizations. The specifications 
+    are designed to be technology-agnostic. 
+servers: 
+- url: https://dev.wbcsd.org/pact/2
+  description: Development server
 paths:
-  /2/footprints/{id}:
-    get:
-      summary: Action GetFootprint
-      operationId: get-footprint
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                - data
-                properties:
-                  data:
-                    $ref: '#/components/schemas/ProductFootprint'
-        '400':
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BadRequest'
-      security:
-      - BearerAuth: []
-  /2/footprints:
+  /footprints:
     get:
       summary: Action ListFootprints
-      operationId: list-footprints
+      description: >
+        Retrieve a list of Product Carbon Footprints (PCFs) that are available. 
+        The list can be filtered by various criteria.
+      operationId: listFootprints
+      tags: [footprint]
       parameters:
       - name: limit
         in: query
@@ -72,15 +59,95 @@ paths:
                     items:
                       $ref: '#/components/schemas/ProductFootprint'
         '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - BearerAuth: []
+  /footprints/{id}:
+    get:
+      summary: Action GetFootprint
+      description: ^
+        Retrieve a single Product Carbon Footprint (PCF) by its unique identifier.
+      operationId: getFootprintById
+      tags: [footprint]
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProductFootprint'
+        '400':
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BadRequest'
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
       security:
       - BearerAuth: []
-  /2/events:
+  /events:
     post:
+      summary: Action Event
+      description: >
+        Post an event to the system. The event will be processed by the system 
+        and may trigger further actions.
       operationId: post_event
       requestBody:
         content:
@@ -95,26 +162,38 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BadRequest'
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccessDenied'
+                $ref: '#/components/schemas/ErrorResponse'
         '501':
-          description: Not implemented.
+          description: Not implemented
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BadRequest'
+                $ref: '#/components/schemas/ErrorResponse'
       security:
       - BearerAuth: []
 components:
   schemas:
     ProductFootprint:
-      description: Data Type "ProductFootprint" of Tech Spec Version 2
+      description: >
+        The ProductFootprint is a data type which represents the footprint
+        of a product under a specific scope (§ 5.2.1 Scope of a Footprint) 
+        and with values calculated in accordance with the PACT Framework.
+        
+        Conceptually, the data type ProductFootprint is modeled as a multi-purpose 
+        container for product-specific emissions factors which is supported by 
+        extensibility through Data Model Extensions.
+
+        Each ProductFootprint can and should be updated over time, for instance 
+        to incorporate new or refined data from data owners (see § 6 Product 
+        Footprint Lifecycle). 
       type: object
+      title: ProductFootprint
       required:
       - id
       - specVersion
@@ -131,11 +210,24 @@ components:
       - pcf
       properties:
         id:
+          description: >
+            A unique identifier that a system uses to refer to the entire dataset of the PCF. 
+            This is typically an automatically-generated number by the technology solution to maintain 
+            the required technical references to data within the system.
           type: string
           format: uuid
         specVersion:
-          $ref: '#/components/schemas/VersionString'
+          description: >
+            The version of the PACT Tech Specs that the data being shared complies with. 
+            This is a string in the format of "major.minor.patch" (e.g. "2.2.1").
+          type: string
+          pattern: '^\d+\.\d+\.\d+(-\d{8})?$'
         precedingPfIds:
+          description: >
+            A given PCF may change over time, due to updates to the calculation. 
+            This field lists all id's that reflect "past versions" of the current PCF. 
+            This is typically an automatically generated field of unique identifiers, 
+            maintained by the technology solution.        
           type: array
           items:
             type: string
@@ -143,89 +235,145 @@ components:
           minItems: 1
           uniqueItems: true
         version:
+          description: >
+            The version number of the PCF; for example starting with 1 and incrementing.
+            If changes are made to the PCF, this version number will increment.
           type: integer
           format: int32
-          maximum: 2147483647
           minimum: 0
         created:
+          description: >
+            The date and time when the PCF was created. This is typically an automatically 
+            generated field by the technology solution.
           type: string
           format: date-time
         updated:
+          description: >
+            The date and time when the PCF was last updated. This is typically an automatically 
+            generated field by the technology solution. If the data has never been updated, 
+            leave blank.
           type: string
           format: date-time
         status:
+          description: >
+            The status of the PCF. Active means that the PCF is the most recent version 
+            and is the one that should be used. Deprecated means that the PCF is no longer 
+            the most recent version and should not be used. 
+            This attribute typically will be automatically generated by the technology 
+            system and will not need to be entered by the user.
           type: string
           enum:
             - Active
             - Deprecated
         statusComment:
           type: string
+          description: >
+            A descriptive reasoning explaining the current status of the PCF, what was 
+            changed since the last version, etc.
         validityPeriodStart:
+          description: >
+            The start date and time of the validity period. The period of time between the 
+            validityPeriodStart and validityPeriodEnd is defined as the "validity period", 
+            and represents the time period during which the PCF is valid. Specifying the 
+            validity period is optional. If this is not specified, then it is assumed the 
+            PCF is valid for 3 years, beginning with the referencePeriodEnd. 
           type: string
           format: date-time
         validityPeriodEnd:
+          description: >
+            The end date and time of the validity period. See validityPeriodStart for more details.
           type: string
           format: date-time
         companyName:
+          description: >
+            The (legal) name of the company supplying the product and reporting the PCF (aka the data owner)
           $ref: '#/components/schemas/NonEmptyString'
         companyIds:
-          $ref: '#/components/schemas/CompanyIdSet'
+          description: >
+            A list of company identifiers which represent the companies that are considered 
+            data owners of the provided PCF. In a large organization, this may include multiple
+            subsidiaries or legal entities of a given corporation, hence the need to provide 
+            multiple identifiers. A list of only one identifier is also valid. The format 
+            of each companyID must be provided as a URN (Uniform Resource Name), which 
+            helps ensure the data provided is standardized and can be interpreted by the 
+            receiving system.          
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Urn'
         productDescription:
+          description: >
+            A description of the product, including any additional relevant information 
+            such as production technology, packaging, feedstock and technical parameters.
           type: string
         productIds:
-          $ref: '#/components/schemas/ProductIdSet'
+          description: >
+            All relevant product identifiers to identify the product for which the provided 
+            PCF was calculated (e.g. supplier part number, GTIN, article number, CPC 
+            classification, CAS Number, BOM Version, batch number, etc.)
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Urn'
         productCategoryCpc:
+          description: >
+            The UN Central Product Classification Code (CPC) for the given product. The relevant 
+            CPC code may be identified here https://unstats.un.org/unsd/classifications/Econ/cpc 
+            Given feedback this code is not commonly used, this attribute will become optional in v3
           $ref: '#/components/schemas/NonEmptyString'
+        productClassifications:
+          description: >
+            A list of classification or category identifiers in URN format. Use well known urn's here, 
+            or adhere to recommended urn:pact: format. This replaces the productCategoryCpc property.
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Urn'
         productNameCompany:
+          description: >
+            The trade name of the product in order for it to be recognizable by the receiver of the PCF information
           $ref: '#/components/schemas/NonEmptyString'
         comment:
+          description: >
+            Any additional information related to the PCF. Whereas the property productDescription 
+            contains product-level information, comment should be used for information and instructions 
+            related to the calculation of the PCF, or other information which informs the ability to interpret
+            (e.g. LUC not included as unable to calculate LUC), to audit or to verify the PCF          
           type: string
         pcf:
           $ref: '#/components/schemas/CarbonFootprint'
-    VersionString:
-      type: string
-      minLength: 5
-      pattern: '^\d+\.\d+\.\d+(-\d{8})?$'
     NonEmptyString:
       type: string
       minLength: 1
-    CompanyIdSet:
-      type: array
-      items:
-        type: string
-        pattern: '^([uU][rR][nN]):'
-      minItems: 1
-      uniqueItems: true
-    GenericURN:
+    Urn:
       type: string
       pattern: '^([uU][rR][nN]):'
-    ProductIdSet:
-      type: array
-      items:
-        type: string
-        pattern: '^([uU][rR][nN]):'
-      minItems: 1
-      uniqueItems: true
     CarbonFootprint:
-      description: Data Type "CarbonFootprint" of Spec Version 2
+      description: ^
+        The CarbonFootprint represents the carbon footprint of a product and related data 
+        in accordance with the PACT Framework.
+      title: ProductFootprint,
       type: object
       required:
-      - biogenicCarbonContent
-      - boundaryProcessesDescription
-      - characterizationFactors
-      - crossSectoralStandardsUsed
       - declaredUnit
-      - exemptedEmissionsDescription
-      - exemptedEmissionsPercent
-      - fossilCarbonContent
-      - fossilGhgEmissions
-      - ipccCharacterizationFactorsSources
+      - unitaryProductAmount
+      - referencePeriodStart
+      - referencePeriodEnd
       - pCfExcludingBiogenic
+      - fossilGhgEmissions
+      - fossilCarbonContent
+      - biogenicCarbonContent
+      - characterizationFactors
+      - ipccCharacterizationFactorsSources
+      - crossSectoralStandardsUsed
+      - boundaryProcessesDescription
+      - exemptedEmissionsPercent
+      - exemptedEmissionsDescription
       - packagingEmissionsIncluded
       - productOrSectorSpecificRules
-      - referencePeriodEnd
-      - referencePeriodStart
-      - unitaryProductAmount
       oneOf:
       - oneOf:
         - required:
@@ -243,87 +391,293 @@ components:
           - required:
             - geographyCountrySubdivision
       properties:
-        geographyRegionOrSubregion:
-          $ref: '#/components/schemas/UNRegionOrSubregion'
-        geographyCountry:
-          $ref: '#/components/schemas/ISO3166CC'
-        geographyCountrySubdivision:
-          $ref: '#/components/schemas/NonEmptyString'
         declaredUnit:
-          $ref: '#/components/schemas/DeclaredUnit'
+          description: >
+            The unit with which the PCF was calculated 
+          type: string
+          enum:
+            - liter
+            - kilogram
+            - cubic meter
+            - kilowatt hour
+            - megajoule
+            - ton kilometer
+            - square meter
         unitaryProductAmount:
+          description: >
+            The amount of Declared Units contained within the product to which the PCF refers to. 
+            This is not representing the total annual quantity supplied (e.g. if the product is 
+            supplied in bulk in kg, which is the declared unit selected, please enter 1)   
+          x-pact-unit: declared unit       
           $ref: '#/components/schemas/PositiveNonZeroDecimal'
         pCfExcludingBiogenic:
+          description: >
+            The PCF of the product excluding biogenic CO2 emissions.
+          x-pact-unit: kgCO2e/declared unit
           $ref: '#/components/schemas/PositiveOrZeroDecimal'
         pCfIncludingBiogenic:
+          description: >
+            The PCF of the product including ALL biogenic emissions (CO2 and otherwise).
+          x-pact-unit: kgCO2e/declared unit
           $ref: '#/components/schemas/Decimal'
         fossilGhgEmissions:
+          description: >
+            The emissions from fossil sources as a result of fuel combustion, from fugitive 
+            emissions, and from process emissions. 
+          x-pact-unit: kgCO2e/declared unit
           $ref: '#/components/schemas/PositiveOrZeroDecimal'
         fossilCarbonContent:
+          description: >
+            The fossil carbon content of the product (mass of carbon).
+          x-pact-unit: kgC/declared unit
           $ref: '#/components/schemas/PositiveOrZeroDecimal'
         biogenicCarbonContent:
+          description: >
+            The biogenic carbon content of the product (mass of carbon).
+          x-pact-unit: kgC/declared unit
           $ref: '#/components/schemas/PositiveOrZeroDecimal'
         dLucGhgEmissions:
+          description: >
+            The emissions from land use change (LUC) activities.Emissions resulting from 
+            recent (i.e., previous 20 years) carbon stock loss due to land conversion directly 
+            on the area of land under consideration. The value of this property MUST include 
+            direct land use change (dLUC) where available, otherwise statistical land use 
+            change (sLUC) can be used.
+          x-pact-unit: kgCO2e/declared unit
           $ref: '#/components/schemas/PositiveOrZeroDecimal'
         landManagementGhgEmissions:
+          description: >
+            GHG emissions and removals associated with land-management-related changes, 
+            including non-CO2 sources.
+          x-pact-unit: kgCO2e/declared unit
           $ref: '#/components/schemas/PositiveOrZeroDecimal'
         otherBiogenicGhgEmissions:
+          description: >
+            All other biogenic GHG emissions associated with product manufacturing and transport 
+            that are not included in dLUC (dLucGhgEmissions), iLUC (iLucGhgEmissions), and land 
+            management (landManagementGhgEmissions). 
+          x-pact-unit: kgCO2e/declared unit
           $ref: '#/components/schemas/PositiveOrZeroDecimal'
         iLucGhgEmissions:
+          description: >
+            Emissions resulting from recent (i.e., previous 20 years) carbon stock loss due to 
+            land conversion on land not owned or controlled by the company or in its supply 
+            chain, induced by change in demand for products produced or sourced by the company.
+          x-pact-unit: kgCO2e/declared unit
           $ref: '#/components/schemas/PositiveOrZeroDecimal'
         biogenicCarbonWithdrawal:
+          description: >
+            The Biogenic Carbon contained in the product converted to kilogram of CO2e.
+          x-pact-unit: kgCO2e/declared unit
           $ref: '#/components/schemas/NegativeOrZeroDecimal'
         aircraftGhgEmissions:
+          description: >
+            The GHG emissions resulting from aircraft engine usage for the transport of the
+            product, excluding radiative forcing.
+          x-pact-unit: kgCO2e/declared unit
           $ref: '#/components/schemas/PositiveOrZeroDecimal'
         characterizationFactors:
-          $ref: '#/components/schemas/CharacterizationFactors'
+          description: >
+            The IPCC (Intergovernmental Panel of Climate Change) frequently releases (GWP) 
+            global warming potential values for climate gases related to CO2. These GWP 
+            values are released in Assessment Reports (AR), which are numbered. The AR 
+            umber can be used to track the age and accuracy of the GWP values used in 
+            reporting. This field indicates the IPCC version of the GWP characterization 
+            factors used in the calculation of the PCF.
+          type: string
+          enum:
+            - AR6
+            - AR5
         ipccCharacterizationFactorsSources:
-          $ref: '#/components/schemas/IpccCharacterizationFactorsSources'
+          description: >              
+            "The IPCC (Intergovernmental Panel of Climate Change) frequently releases (GWP) 
+            global warming potential values for climate gases related to CO2. These GWP 
+            values are released in Assessment Reports (AR), which are numbered. The AR 
+            umber can be used to track the age and accuracy of the GWP values used in 
+            reporting. This field indicates the IPCC version of the GWP characterization 
+            factors used in the calculation of the PCF.
+
+            Per the Framework, the latest available characterization factor version shall 
+            be used, i.e., [""AR6""]. In the event this is not possible, include the set 
+            of all characterization factors used."
+          type: array
+          items:
+            type: string
+            pattern: '^AR\d+$'
+          minItems: 1
+          uniqueItems: true
         crossSectoralStandardsUsed:
-          $ref: '#/components/schemas/CrossSectoralStandardSet'
+          description: >
+            The cross sectoral standard(s) used as a basis for the PCF calculation. 
+            If multiple apply, list all.
+          type: array
+          items:
+            type: string
+            enum:
+              - GHG Protocol Product standard
+              - ISO Standard 14067
+              - ISO Standard 14044
+          minItems: 1
+          uniqueItems: true
         productOrSectorSpecificRules:
-          $ref: '#/components/schemas/ProductOrSectorSpecificRuleSet'
+          description: >
+            The product-specific or sector-specific rules applied for calculating or 
+            allocating GHG emissions. Sector specific guidance frameworks, such as 
+            Product Category Rules (PCR), are sets of rules for how to calculate and 
+            document Life Cycle Assessments. They provide product category specific
+            guidance and enhance comparability between assessments of the different 
+            suppliers for the same category (sector). The same applies to Product 
+            Environmental Footprint Category Rules (PEFCR)).  If no rules were used, 
+            leave this field empty.
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductOrSectorSpecificRule'
+          minItems: 1
+          uniqueItems: true
         biogenicAccountingMethodology:
-          $ref: '#/components/schemas/BiogenicAccountingMethodology'
+          description: >
+            Name of the standard followed to account for biogenic emissions and removals.
+          type: string
+          enum:
+            - PEF
+            - ISO
+            - GHGP
+            - Quantis
         boundaryProcessesDescription:
+          description: >  
+            Brief description of the processes attributable to each life cycle stage included 
+            in the PCF (e.g. electricity consumption for manufacturing), especially those 
+            that significantly contribute manufacturing steps of the product (including 
+            general description of used technologies).
           type: string
         referencePeriodStart:
+          description: >
+            The start date and time of the earliest activity data used to calculate the 
+            PCF. This start date can be considered the start of the period over which 
+            the given PCF is referencing, or reporting on.
           type: string
           format: date-time
         referencePeriodEnd:
+          description: >
+            The end date and time of the latest activity data used to calculate the PCF. 
+            This end date can be considered the end of the period over which the given 
+            PCF is referencing, or reporting on.
           type: string
           format: date-time
+        geographyRegionOrSubregion:
+          description: >
+            The geographic representation of the PCF may be reported at different 
+            levels of granularity, depending on the prefere of the data provider 
+            (e.g., at a plant, region, or country level). This attribute specifies 
+            the geographic region to which the PCF refers, i.e. "Africa", 
+            "Central Asia", etc.
+          type: string
+          enum:
+            - Africa
+            - Americas
+            - Asia
+            - Europe
+            - Oceania
+            - Australia and New Zealand
+            - Central Asia
+            - Eastern Asia
+            - Eastern Europe
+            - Latin America and the Caribbean
+            - Melanesia
+            - Micronesia
+            - Northern Africa
+            - Northern America
+            - Northern Europe
+            - Polynesia
+            - South-eastern Asia
+            - Southern Asia
+            - Southern Europe
+            - Sub-Saharan Africa
+            - Western Asia
+            - Western Europe
+        geographyCountry:
+          description: >
+            The geographic representation of the PCF may be reported at different levels
+            of granularity, depending on the prefere of the data provider (e.g., at a 
+            plant, region, or country level). This field indicates the country to which 
+            the PCF refers. The country name must be according to ISO 3166-2 alpha-2 
+            country code (https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)
+          type: string
+          pattern: '^[A-Z]{2}$'
+          comment: ISO 3166-1 alpha-2
+          examples:
+            - US
+            - DE
+        geographyCountrySubdivision:
+          description: >
+            The geographic representation of the PCF may be reported at different 
+            levels of granularity, depending on the prefere of the data provider 
+            (e.g., at a plant, region, or country level). This attribute represents 
+            the most granular (i.e. "most specific") geography, i.e. the specific 
+            subdivision within a given country, for example New York State within 
+            the USA. Follows ISO 3166-2.
+          type: string
+          pattern: '^[A-Z]{2}-[A-Z0-9]{1,3}$'
+          comment: ISO 3166-2
+          examples:
+            - US-CA
+            - DE-BW
         secondaryEmissionFactorSources:
-          $ref: '#/components/schemas/EmissionFactorDSSet'
+          description: >
+            The list of secondary data sources and versions which have been used by 
+            you or by suppliers (e.g. data bases such as ecoinvent) for the PCF 
+            calculation
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/EmissionFactorDS'
         exemptedEmissionsPercent:
-          $ref: '#/components/schemas/ExemptedEmissionsPercent'
+          description: >
+            Percentage of emissions EXCLUDED from the cradle to gate PCF in total. 
+            The percentage MUST be expressed as a decimal number, and SHOULD comply 
+            with the Framework (a maximum of 5% of the cradle to gate PCF emissions 
+            may be excluded) as well as any relevant sector specific guidelines 
+            referring to exemption rules/cut-off criteria.
+          $ref: '#/components/schemas/Percent'
+          maximum: 5
         exemptedEmissionsDescription:
+          description: >
+            If emissions exempted, rationale behind exclusion of specific PCF emissions.
           type: string
         packagingEmissionsIncluded:
+          description: >
+            True or False to indicate whether packaging emissions are including in the PCF.
           type: boolean
         packagingGhgEmissions:
+          description: >
+            Emissions resulting from the packaging of the product. The value MUST NOT 
+            be defined if packagingEmissionsIncluded is False.
           $ref: '#/components/schemas/PositiveOrZeroDecimal'
+          x-pact-unit: kgCO2e/declared unit
         allocationRulesDescription:
+          description: >
+            Description of the allocation rules applied to the PCF's foreground data 
+            including an explanation of the underlying reasons (way of allocating 
+            all activities from your manufacturing steps to the declared unit).
           type: string
         uncertaintyAssessmentDescription:
+          description: >
+            Results, key drivers, and a short qualitative description of the 
+            uncertainty assessment, if applicable.
           type: string
         primaryDataShare:
+          description: >
+            Share of primary data in the final PCF, calculated according to 
+            the Framework.
           $ref: '#/components/schemas/Percent'
         dqi:
+          description: >
+            Data Quality Indicators (dqi) in accordance with the Framework. 
           $ref: '#/components/schemas/DataQualityIndicators'
         assurance:
+          description: >
+            If present, the Assurance information in accordance with Framework.
           $ref: '#/components/schemas/Assurance'
-    DeclaredUnit:
-      description: Data Type "DeclaredUnit" of Spec Version 2
-      type: string
-      enum:
-      - liter
-      - kilogram
-      - cubic meter
-      - kilowatt hour
-      - megajoule
-      - ton kilometer
-      - square meter
     PositiveNonZeroDecimal:
       type: string
       pattern: ^[+]?(\d*[1-9]\d*)(\.\d+)?|(0+\.\d*[1-9]\d*)$
@@ -340,56 +694,6 @@ components:
     NegativeNonZeroDecimal:
       type: string
       pattern: ^-((\d*[1-9]\d*)(\.\d+)?|(0+\.\d*[1-9]\d*))$
-    CharacterizationFactors:
-      type: string
-      enum:
-      - AR5
-      - AR6
-    IpccCharacterizationFactorsSources:
-      type: array
-      items:
-        type: string
-        pattern: ^AR\d+$
-      minItems: 1
-      uniqueItems: true
-    IpccCharacterizationFactorsSource:
-      type: string
-      pattern: ^AR\d+$
-    CrossSectoralStandardSet:
-      type: array
-      items:
-        description: Data Type "CrossSectoralStandard" of Spec Version 2
-        type: string
-        enum:
-        - GHG Protocol Product standard
-        - ISO Standard 14067
-        - ISO Standard 14044
-      minItems: 1
-      uniqueItems: true
-    CrossSectoralStandard:
-      description: Data Type "CrossSectoralStandard" of Spec Version 2
-      type: string
-      enum:
-      - GHG Protocol Product standard
-      - ISO Standard 14067
-      - ISO Standard 14044
-    ProductOrSectorSpecificRuleSet:
-      type: array
-      items:
-        type: object
-        required:
-        - operator
-        - ruleNames
-        properties:
-          operator:
-            $ref: '#/components/schemas/ProductOrSectorSpecificRuleOperator'
-          ruleNames:
-            $ref: '#/components/schemas/NonEmptyStringVec'
-          otherOperatorName:
-            anyOf:
-            - $ref: '#/components/schemas/NonEmptyString'
-            - type: 'null'
-      uniqueItems: true
     ProductOrSectorSpecificRule:
       type: object
       required:
@@ -397,47 +701,32 @@ components:
       - ruleNames
       properties:
         operator:
-          $ref: '#/components/schemas/ProductOrSectorSpecificRuleOperator'
+          description: >
+            Selection of operator of PCR being used for the PCF calculation. If 
+            operator is not available in the given list, or if you have followed
+            a sector specific guidance, please select "Other" and include details 
+            under "otherOperatorName".
+          type: string
+          enum:
+            - PEF
+            - EPD International
+            - Other
         ruleNames:
-          $ref: '#/components/schemas/NonEmptyStringVec'
+          description: >
+            Names of the product or sector specific rules being used for the PCF 
+            calculation.
+          type: array
+          items:
+            type: string
+            minLength: 1
+          minItems: 1
+          uniqueItems: true
         otherOperatorName:
-          anyOf:
-          - $ref: '#/components/schemas/NonEmptyString'
-          - type: 'null'
-    ProductOrSectorSpecificRuleOperator:
-      type: string
-      enum:
-      - PEF
-      - EPD International
-      - Other
-    NonEmptyStringVec:
-      type: array
-      items:
-        type: string
-        minLength: 1
-      minItems: 1
-      uniqueItems: true
-    BiogenicAccountingMethodology:
-      type: string
-      enum:
-      - PEF
-      - ISO
-      - GHPG
-      - Quantis
-    EmissionFactorDSSet:
-      type: array
-      items:
-        type: object
-        required:
-        - name
-        - version
-        properties:
-          name:
-            $ref: '#/components/schemas/NonEmptyString'
-          version:
-            $ref: '#/components/schemas/NonEmptyString'
-      minItems: 1
-      uniqueItems: true
+          description: >
+            If operator is Other, then this attribute must be populated with the name 
+            of the operator.
+          type: string
+          minLength: 1
     EmissionFactorDS:
       type: object
       required:
@@ -445,41 +734,69 @@ components:
       - version
       properties:
         name:
+          description: >
+            Name of the secondary emission factor databases
           $ref: '#/components/schemas/NonEmptyString'
         version:
+          description: >
+            Version of the secondary emission factor databases
           $ref: '#/components/schemas/NonEmptyString'
-    ExemptedEmissionsPercent:
-      type: number
-      format: double
-      maximum: 5
-      minimum: 0
     Percent:
       type: number
       format: double
-      maximum: 100
       minimum: 0
+      maximum: 100
     DataQualityIndicators:
       description: Data Type "DataQualityIndicators" of Spec Version 2
+      title: DataQualityIndicators
       type: object
       required:
-      - completenessDQR
       - coveragePercent
-      - geographicalDQR
-      - reliabilityDQR
       - technologicalDQR
       - temporalDQR
+      - geographicalDQR
+      - completenessDQR
+      - reliabilityDQR
       properties:
         coveragePercent:
+          description: >
+            Percentage of PCF included in the data quality assessment based on 
+            the >5% emissions threshold.
           $ref: '#/components/schemas/Percent'
         technologicalDQR:
+          description: >
+            Quantitative data quality rating (DQR) based on the data quality matrix
+            (Framework Table 9), scoring the technological representativeness of the 
+            sources used for PCF calculation based on weighted average of all inputs 
+            representing >5% of PCF emissions.
           $ref: '#/components/schemas/FloatBetween1And3'
         temporalDQR:
+          description: >
+            Quantitative data quality rating (DQR) based on the data quality matrix 
+            (Framework Table 9), scoring the temporal representativeness of the sources 
+            used for PCF calculation based on weighted average of all inputs 
+            representing >5% of PCF emissions.
           $ref: '#/components/schemas/FloatBetween1And3'
         geographicalDQR:
+          description: >
+            Quantitative data quality rating (DQR) based on the data quality matrix 
+            (Framework Table 9), scoring the geographical representativeness of the 
+            sources used for PCF calculation based on weighted average of all inputs 
+            representing >5% of PCF emissions.
           $ref: '#/components/schemas/FloatBetween1And3'
         completenessDQR:
+          description: >
+            Quantitative data quality rating (DQR) based on the data quality matrix 
+            (Framework Table 9), scoring the completeness of the data collected for 
+            PCF calculation based on weighted average of all inputs representing 
+            >5% of PCF emissions.
           $ref: '#/components/schemas/FloatBetween1And3'
         reliabilityDQR:
+          description: >
+            Quantitative data quality rating (DQR) based on the data quality matrix 
+            (Framework Table 9), scoring the reliability of the data collected for 
+            PCF calculation based on weighted average of all inputs representing 
+            >5% of PCF emissions.
           $ref: '#/components/schemas/FloatBetween1And3'
     FloatBetween1And3:
       type: number
@@ -488,103 +805,64 @@ components:
       minimum: 1
     Assurance:
       description: Data Type "Assurance" of Spec Version 2
+      title: Assurance
       type: object
       required:
       - assurance
       - providerName
       properties:
         assurance:
+          description: >
+            True or False to indicate whether the PCF has been assured in line with the Framework.
           type: boolean
         coverage:
-          $ref: '#/components/schemas/AssuranceCoverage'
+          description: >
+            Level of granularity of the emissions data assured
+          type: string
+          enum:
+            - corporate level
+            - product line
+            - PCF system
+            - product level
         level:
-          $ref: '#/components/schemas/AssuranceLevel'
+          description: >
+            Level of assurance applicable to the PCF
+          type: string
+          enum:
+            - limited
+            - reasonable
         boundary:
-          $ref: '#/components/schemas/AssuranceBoundary'
+          description: >
+            Boundary of the assurance
+          type: string
+          enum:
+            - Gate-to-Gate
+            - Cradle-to-Gate
         providerName:
+          description: >
+            Name of the independent third party engaged to undertake assurance
           type: string
         completedAt:
+          description: >
+            The date at which the assurance was completed
           type: string
           format: date-time
         standardName:
+          description: >
+            Name of the standard against which the PCF was assured
           type: string
         comments:
+          description: >
+            Any additional comments that will clarify the interpretation of the assurance.
           type: string
-    AssuranceCoverage:
-      type: string
-      enum:
-      - corporate level
-      - product line
-      - PCF system
-      - product level
-    AssuranceLevel:
-      type: string
-      enum:
-      - limited
-      - reasonable
-    AssuranceBoundary:
-      type: string
-      enum:
-      - Gate-to-Gate
-      - Cradle-to-Gate
-    UNRegionOrSubregion:
-      description: List of UN regions and subregions
-      type: string
-      enum:
-      - Africa
-      - Americas
-      - Asia
-      - Europe
-      - Oceania
-      - Australia and New Zealand
-      - Central Asia
-      - Eastern Asia
-      - Eastern Europe
-      - Latin America and the Caribbean
-      - Melanesia
-      - Micronesia
-      - Northern Africa
-      - Northern America
-      - Northern Europe
-      - Polynesia
-      - South-eastern Asia
-      - Southern Asia
-      - Southern Europe
-      - Sub-Saharan Africa
-      - Western Asia
-      - Western Europe
-    ISO3166CC:
-      type: string
-    BadRequest:
-      description: Response with an error code of `BadRequest`. See Chapter "Error
-        Codes" of the Tech Specs for mor details.
-      type: object
-      required:
-      - code
-      - message
-      properties:
-        message:
-          type: string
-        code:
-          type: string
-    AccessDenied:
-      description: Response with an error code of `AccessDenied`. See Chapter "Error
-        Codes" of the Tech Specs for mor details.
-      type: object
-      required:
-      - code
-      - message
-      properties:
-        message:
-          type: string
-        code:
-          type: string
+    # -----------
+    # Event Types
     PathfinderEvent:
       description: possible contents of `data` property of events - see tech specs
         section 6 for details
       type: object
       oneOf:
-      - description: "the contents of the `data` field of a `PF Update Event` – see
+      - description: "the contents of the `data` field of a `PF Update Event` - see
           Tech Specs section 6.8.3"
         type: object
         required:
@@ -643,13 +921,35 @@ components:
         pf: {}
         comment:
           type: string
+    # ---------------
+    # Error Responses
+    ErrorResponse:
+      title: ErrorResponse
+      description: Response with an error code and descripton. See Chapter "Error
+        Codes" of the Tech Specs for more details.
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+            - BadRequest
+            - NotImplemented
+            - AccessDenied
+            - NoSuchFootprint
+            - TokenExpired
+            - InternalError
+        message:
+          type: string
+      required:
+      - code
+      - message
   securitySchemes:
     BearerAuth:
       description: OAuth2 Client Credentials Grant (RFC6749 4.4)
       type: oauth2
       flows:
         clientCredentials:
-          tokenUrl: '/2/auth/token'
+          tokenUrl: '/auth/token'
           scopes:
             footprint:list: Ability to list footprints
             footprint:read: Ability to access individual footprints
