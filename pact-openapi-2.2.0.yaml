@@ -1,44 +1,27 @@
 openapi: 3.1.0
 info:
   title: PACT API Specification
+  summary: Technical Specifications for PCF Data Exchange (Version 2.2.0)
   version: 2.2.0
+  contact: 
+    name: WBCSD PACT Project
+    url: https://github.com/wbcsd
+    email: pact@wbcsd.org
+  description: >
+    This document describes the technical specifications for the exchange of 
+    Product Carbon Footprint (PCF) data between systems. The specification is 
+    maintained by the WBCSD PACT project and  intended to be used by organizations 
+    that wish to exchange PCF data with other organizations. The specifications 
+    are designed to be technology-agnostic. 
 paths:
-  /2/footprints/{id}:
-    get:
-      summary: Action GetFootprint
-      operationId: get-footprint
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                description: HTTP Body of Action `GetFootprint`
-                type: object
-                required:
-                - data
-                properties:
-                  data:
-                    $ref: '#/components/schemas/ProductFootprint'
-        '400':
-          description: The request given is wrongly formatted or data was missing.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BadRequest'
-      security:
-      - BearerAuth: []
-  /2/footprints:
+  /footprints:
     get:
       summary: Action ListFootprints
-      operationId: list-footprints
+      description: >
+        Retrieve a list of Product Carbon Footprints (PCFs) that are available. 
+        The list can be filtered by various criteria.
+      operationId: listFootprints
+      tags: [footprint]
       parameters:
       - name: limit
         in: query
@@ -54,7 +37,7 @@ paths:
           type: string
       responses:
         '200':
-          description: ''
+          description: Success
           headers:
             link:
               description: Link header to next result set. See Tech Specs section 6.6.1
@@ -73,15 +56,96 @@ paths:
                     items:
                       $ref: '#/components/schemas/ProductFootprint'
         '400':
-          description: The request given is wrongly formatted or data was missing.
+          description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BadRequest'
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
       security:
       - BearerAuth: []
-  /2/events:
+  /footprints/{id}:
+    get:
+      summary: Action GetFootprint
+      description: ^
+        Retrieve a single Product Carbon Footprint (PCF) by its unique identifier.
+      operationId: getFootprintById
+      tags: [footprint]
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                description: HTTP Body of Action `GetFootprint`
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProductFootprint'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - BearerAuth: []
+  /events:
     post:
+      summary: Action Event
+      description: >
+        Post an event to the system. The event will be processed by the system 
+        and may trigger further actions.
       operationId: post_event
       requestBody:
         content:
@@ -90,33 +154,44 @@ paths:
               $ref: '#/components/schemas/PathfinderEvent'
       responses:
         '200':
-          description: ''
+          description: Success
         '400':
-          description: The request given is wrongly formatted or data was missing. "
+          description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BadRequest'
+                $ref: '#/components/schemas/ErrorResponse'
         '403':
-          description: '# 403 Forbidden'
+          description: Forbidden
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccessDenied'
+                $ref: '#/components/schemas/ErrorResponse'
         '501':
-          description: "# 501 Not Implemented\nThe request given is not implemented
-            by the server. "
+          description: Not implemented
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BadRequest'
+                $ref: '#/components/schemas/ErrorResponse'
       security:
       - BearerAuth: []
 components:
   schemas:
     ProductFootprint:
-      description: Data Type "ProductFootprint" of Tech Spec Version 2
+      description: >
+        The ProductFootprint is a data type which represents the footprint
+        of a product under a specific scope (§ 5.2.1 Scope of a Footprint) 
+        and with values calculated in accordance with the PACT Framework.
+        
+        Conceptually, the data type ProductFootprint is modeled as a multi-purpose 
+        container for product-specific emissions factors which is supported by 
+        extensibility through Data Model Extensions.
+
+        Each ProductFootprint can and should be updated over time, for instance 
+        to incorporate new or refined data from data owners (see § 6 Product 
+        Footprint Lifecycle). 
       type: object
+      title: ProductFootprint
       required:
       - id
       - specVersion
@@ -136,7 +211,8 @@ components:
           type: string
           format: uuid
         specVersion:
-          $ref: '#/components/schemas/VersionString'
+          type: string
+          pattern: '^\d+\.\d+\.\d+(-\d{8})?$'
         precedingPfIds:
           type: array
           items:
@@ -175,11 +251,19 @@ components:
         companyName:
           $ref: '#/components/schemas/NonEmptyString'
         companyIds:
-          $ref: '#/components/schemas/CompanyIdSet'
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Urn'
         productDescription:
           type: string
         productIds:
-          $ref: '#/components/schemas/ProductIdSet'
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Urn'
         productCategoryCpc:
           $ref: '#/components/schemas/NonEmptyString'
         productNameCompany:
@@ -188,103 +272,107 @@ components:
           type: string
         pcf:
           $ref: '#/components/schemas/CarbonFootprint'
-    VersionString:
-      type: string
-      minLength: 5
-      pattern: '^\d+\.\d+\.\d+(-\d{8})?$'
     NonEmptyString:
       type: string
       minLength: 1
-    CompanyIdSet:
-      type: array
-      items:
-        type: string
-        pattern: '^([uU][rR][nN]):'
-      minItems: 1
-      uniqueItems: true
-    GenericURN:
+    Urn:
       type: string
       pattern: '^([uU][rR][nN]):'
-    ProductIdSet:
-      type: array
-      items:
-        type: string
-        pattern: '^([uU][rR][nN]):'
-      minItems: 1
-      uniqueItems: true
     CarbonFootprint:
       description: Data Type "CarbonFootprint" of Spec Version 2
+      title: CarbonFootprint
       type: object
       required:
-      - biogenicCarbonContent
-      - boundaryProcessesDescription
-      - characterizationFactors
-      - crossSectoralStandardsUsed
       - declaredUnit
-      - exemptedEmissionsDescription
-      - exemptedEmissionsPercent
-      - fossilCarbonContent
-      - fossilGhgEmissions
-      - ipccCharacterizationFactorsSources
+      - unitaryProductAmount
+      - referencePeriodStart
+      - referencePeriodEnd
       - pCfExcludingBiogenic
+      - fossilGhgEmissions
+      - fossilCarbonContent
+      - biogenicCarbonContent
+      - characterizationFactors
+      - ipccCharacterizationFactorsSources
+      - crossSectoralStandardsUsed
+      - boundaryProcessesDescription
+      - exemptedEmissionsPercent
+      - exemptedEmissionsDescription
       - packagingEmissionsIncluded
       - productOrSectorSpecificRules
-      - referencePeriodEnd
-      - referencePeriodStart
-      - unitaryProductAmount
       properties:
         declaredUnit:
-          $ref: '#/components/schemas/DeclaredUnit'
+          type: string
+          enum:
+            - liter
+            - kilogram
+            - cubic meter
+            - kilowatt hour
+            - megajoule
+            - ton kilometer
+            - square meter
         unitaryProductAmount:
-          $ref: '#/components/schemas/StrictlyPositiveDecimal'
+          $ref: '#/components/schemas/PositiveNonZeroDecimal'
         pCfExcludingBiogenic:
-          $ref: '#/components/schemas/PositiveDecimal'
+          $ref: '#/components/schemas/PositiveOrZeroDecimal'
         pCfIncludingBiogenic:
-          allOf:
-          - $ref: '#/components/schemas/Decimal'
-          nullable: true
+          $ref: '#/components/schemas/Decimal'
         fossilGhgEmissions:
-          $ref: '#/components/schemas/PositiveDecimal'
+          $ref: '#/components/schemas/PositiveOrZeroDecimal'
         fossilCarbonContent:
-          $ref: '#/components/schemas/PositiveDecimal'
+          $ref: '#/components/schemas/PositiveOrZeroDecimal'
         biogenicCarbonContent:
-          $ref: '#/components/schemas/PositiveDecimal'
+          $ref: '#/components/schemas/PositiveOrZeroDecimal'
         dLucGhgEmissions:
-          allOf:
-          - $ref: '#/components/schemas/PositiveDecimal'
-          nullable: true
+          $ref: '#/components/schemas/PositiveOrZeroDecimal'
         landManagementGhgEmissions:
-          allOf:
-          - $ref: '#/components/schemas/PositiveDecimal'
-          nullable: true
+          $ref: '#/components/schemas/PositiveOrZeroDecimal'
         otherBiogenicGhgEmissions:
-          allOf:
-          - $ref: '#/components/schemas/PositiveDecimal'
-          nullable: true
+          $ref: '#/components/schemas/PositiveOrZeroDecimal'
         iLucGhgEmissions:
-          allOf:
-          - $ref: '#/components/schemas/PositiveDecimal'
-          nullable: true
+          $ref: '#/components/schemas/PositiveOrZeroDecimal'
         biogenicCarbonWithdrawal:
-          allOf:
-          - $ref: '#/components/schemas/NegativeDecimal'
-          nullable: true
+          $ref: '#/components/schemas/NegativeOrZeroDecimal'
         aircraftGhgEmissions:
-          allOf:
-          - $ref: '#/components/schemas/PositiveDecimal'
-          nullable: true
-        characterizationFactors:
-          $ref: '#/components/schemas/CharacterizationFactors'
+          $ref: '#/components/schemas/PositiveOrZeroDecimal'
         ipccCharacterizationFactorsSources:
-          $ref: '#/components/schemas/IpccCharacterizationFactorsSources'
+          type: array
+          items:
+            type: string
+            pattern: '^AR\d+$'
+          minItems: 1
+          uniqueItems: true
         crossSectoralStandardsUsed:
-          $ref: '#/components/schemas/CrossSectoralStandardSet'
+          type: array
+          items:
+            type: string
+            enum:
+              - GHG Protocol Product standard
+              - ISO Standard 14067
+              - ISO Standard 14044
+          minItems: 1
+          uniqueItems: true
         productOrSectorSpecificRules:
-          $ref: '#/components/schemas/ProductOrSectorSpecificRuleSet'
+          description: >
+            The product-specific or sector-specific rules applied for calculating or 
+            allocating GHG emissions. Sector specific guidance frameworks, such as 
+            Product Category Rules (PCR), are sets of rules for how to calculate and 
+            document Life Cycle Assessments. They provide product category specific
+            guidance and enhance comparability between assessments of the different 
+            suppliers for the same category (sector). The same applies to Product 
+            Environmental Footprint Category Rules (PEFCR)).  If no rules were used, 
+            leave this field empty.
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductOrSectorSpecificRule'
+          minItems: 1
+          uniqueItems: true
         biogenicAccountingMethodology:
-          allOf:
-          - $ref: '#/components/schemas/BiogenicAccountingMethodology'
-          nullable: true
+          type: string
+          enum:
+            - PEF
+            - ISO
+            - GHGP
+            - Quantis
         boundaryProcessesDescription:
           type: string
         referencePeriodStart:
@@ -294,28 +382,77 @@ components:
           type: string
           format: date-time
         geographyRegionOrSubregion:
-          description: Encoded geographic scope rules of a Spec Version 2 `CarbonFootprint`
-          $ref: '#/components/schemas/UNRegionOrSubregion'
+          description: >
+            The geographic representation of the PCF may be reported at different 
+            levels of granularity, depending on the prefere of the data provider 
+            (e.g., at a plant, region, or country level). This attribute specifies 
+            the geographic region to which the PCF refers, i.e. "Africa", 
+            "Central Asia", etc.
+          type: string
+          enum:
+            - Africa
+            - Americas
+            - Asia
+            - Europe
+            - Oceania
+            - Australia and New Zealand
+            - Central Asia
+            - Eastern Asia
+            - Eastern Europe
+            - Latin America and the Caribbean
+            - Melanesia
+            - Micronesia
+            - Northern Africa
+            - Northern America
+            - Northern Europe
+            - Polynesia
+            - South-eastern Asia
+            - Southern Asia
+            - Southern Europe
+            - Sub-Saharan Africa
+            - Western Asia
+            - Western Europe
         geographyCountry:
-          description: Encoded geographic scope rules of a Spec Version 2 `CarbonFootprint`
-          $ref: '#/components/schemas/ISO3166CC'
+          description: >
+            The geographic representation of the PCF may be reported at different levels
+            of granularity, depending on the prefere of the data provider (e.g., at a 
+            plant, region, or country level). This field indicates the country to which 
+            the PCF refers. The country name must be according to ISO 3166-2 alpha-2 
+            country code (https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)
+          type: string
+          pattern: '^[A-Z]{2}$'
+          comment: ISO 3166-1 alpha-2
+          examples:
+            - US
+            - DE
         geographyCountrySubdivision:
-          description: Encoded geographic scope rules of a Spec Version 2 `CarbonFootprint`
-          $ref: '#/components/schemas/NonEmptyString'
+          description: >
+            The geographic representation of the PCF may be reported at different 
+            levels of granularity, depending on the prefere of the data provider 
+            (e.g., at a plant, region, or country level). This attribute represents 
+            the most granular (i.e. "most specific") geography, i.e. the specific 
+            subdivision within a given country, for example New York State within 
+            the USA. Follows ISO 3166-2.
+          type: string
+          pattern: '^[A-Z]{2}-[A-Z0-9]{1,3}$'
+          comment: ISO 3166-2
+          examples:
+            - US-CA
+            - DE-BW
         secondaryEmissionFactorSources:
-          allOf:
-          - $ref: '#/components/schemas/EmissionFactorDSSet'
-          nullable: true
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/EmissionFactorDS'
         exemptedEmissionsPercent:
-          $ref: '#/components/schemas/ExemptedEmissionsPercent'
+          $ref: '#/components/schemas/Percent'
+          maximum: 5
         exemptedEmissionsDescription:
           type: string
         packagingEmissionsIncluded:
           type: boolean
         packagingGhgEmissions:
-          allOf:
-          - $ref: '#/components/schemas/PositiveDecimal'
-          nullable: true
+          $ref: '#/components/schemas/PositiveOrZeroDecimal'
         allocationRulesDescription:
           type: string
           nullable: true
@@ -323,90 +460,25 @@ components:
           type: string
           nullable: true
         primaryDataShare:
-          allOf:
-          - $ref: '#/components/schemas/Percent'
-          nullable: true
+          $ref: '#/components/schemas/Percent'
         dqi:
-          allOf:
-          - $ref: '#/components/schemas/DataQualityIndicators'
-          nullable: true
+          $ref: '#/components/schemas/DataQualityIndicators'
         assurance:
-          allOf:
-          - $ref: '#/components/schemas/Assurance'
+          $ref: '#/components/schemas/Assurance'
           nullable: true
-    DeclaredUnit:
-      description: Data Type "DeclaredUnit" of Spec Version 2
-      type: string
-      enum:
-      - liter
-      - kilogram
-      - cubic meter
-      - kilowatt hour
-      - megajoule
-      - ton kilometer
-      - square meter
-    StrictlyPositiveDecimal:
+
+    PositiveNonZeroDecimal:
       type: string
       pattern: '^(\\d*[1-9]\\d*([\\.]\\d+)?|\\d+(\\.\\d*[1-9]\\d*)?)$'
-    PositiveDecimal:
+    PositiveOrZeroDecimal:
       type: string
       pattern: '^\\d+(\\.\\d+)?$'
     Decimal:
       type: string
       pattern: '^-?\\d+(\\.\\d+)?$'
-    NegativeDecimal:
+    NegativeOrZeroDecimal:
       type: string
       pattern: '^(-\\d+(\\.\\d+)?)|0$'
-    CharacterizationFactors:
-      type: string
-      enum:
-      - AR5
-      - AR6
-    IpccCharacterizationFactorsSources:
-      type: array
-      items:
-        type: string
-        pattern: '^AR\\d+$'
-      minItems: 1
-      uniqueItems: true
-    IpccCharacterizationFactorsSource:
-      type: string
-      pattern: '^AR\\d+$'
-    CrossSectoralStandardSet:
-      type: array
-      items:
-        description: Data Type "CrossSectoralStandard" of Spec Version 2
-        type: string
-        enum:
-        - GHG Protocol Product standard
-        - ISO Standard 14067
-        - ISO Standard 14044
-      minItems: 1
-      uniqueItems: true
-    CrossSectoralStandard:
-      description: Data Type "CrossSectoralStandard" of Spec Version 2
-      type: string
-      enum:
-      - GHG Protocol Product standard
-      - ISO Standard 14067
-      - ISO Standard 14044
-    ProductOrSectorSpecificRuleSet:
-      type: array
-      items:
-        type: object
-        required:
-        - operator
-        - ruleNames
-        properties:
-          operator:
-            $ref: '#/components/schemas/ProductOrSectorSpecificRuleOperator'
-          ruleNames:
-            $ref: '#/components/schemas/NonEmptyStringVec'
-          otherOperatorName:
-            allOf:
-            - $ref: '#/components/schemas/NonEmptyString'
-            nullable: true
-      uniqueItems: true
     ProductOrSectorSpecificRule:
       type: object
       required:
@@ -414,47 +486,20 @@ components:
       - ruleNames
       properties:
         operator:
-          $ref: '#/components/schemas/ProductOrSectorSpecificRuleOperator'
+          type: string
+          enum:
+            - PEF
+            - EPD International
+            - Other
         ruleNames:
-          $ref: '#/components/schemas/NonEmptyStringVec'
+          type: array
+          items:
+            type: string
+            minLength: 1
+          minItems: 1
+          uniqueItems: true
         otherOperatorName:
-          allOf:
-          - $ref: '#/components/schemas/NonEmptyString'
-          nullable: true
-    ProductOrSectorSpecificRuleOperator:
-      type: string
-      enum:
-      - PEF
-      - EPD International
-      - Other
-    NonEmptyStringVec:
-      type: array
-      items:
-        type: string
-        minLength: 1
-      minItems: 1
-      uniqueItems: true
-    BiogenicAccountingMethodology:
-      type: string
-      enum:
-      - PEF
-      - ISO
-      - GHPG
-      - Quantis
-    EmissionFactorDSSet:
-      type: array
-      items:
-        type: object
-        required:
-        - name
-        - version
-        properties:
-          name:
-            $ref: '#/components/schemas/NonEmptyString'
-          version:
-            $ref: '#/components/schemas/NonEmptyString'
-      minItems: 1
-      uniqueItems: true
+          $ref: '#/components/schemas/NonEmptyString'
     EmissionFactorDS:
       type: object
       required:
@@ -465,11 +510,6 @@ components:
           $ref: '#/components/schemas/NonEmptyString'
         version:
           $ref: '#/components/schemas/NonEmptyString'
-    ExemptedEmissionsPercent:
-      type: number
-      format: double
-      maximum: 5
-      minimum: 0
     Percent:
       type: number
       format: double
@@ -477,29 +517,31 @@ components:
       minimum: 0
     DataQualityIndicators:
       description: Data Type "DataQualityIndicators" of Spec Version 2
+      title: DataQualityIndicators
       type: object
       required:
-      - completenessDQR
       - coveragePercent
-      - geographicalDQR
-      - reliabilityDQR
       - technologicalDQR
       - temporalDQR
+      - geographicalDQR
+      - completenessDQR
+      - reliabilityDQR
       properties:
         coveragePercent:
           $ref: '#/components/schemas/Percent'
         technologicalDQR:
-          $ref: '#/components/schemas/StrictlyPositiveDecimal'
+          $ref: '#/components/schemas/PositiveNonZeroDecimal'
         temporalDQR:
-          $ref: '#/components/schemas/StrictlyPositiveDecimal'
+          $ref: '#/components/schemas/PositiveNonZeroDecimal'
         geographicalDQR:
-          $ref: '#/components/schemas/StrictlyPositiveDecimal'
+          $ref: '#/components/schemas/PositiveNonZeroDecimal'
         completenessDQR:
-          $ref: '#/components/schemas/StrictlyPositiveDecimal'
+          $ref: '#/components/schemas/PositiveNonZeroDecimal'
         reliabilityDQR:
-          $ref: '#/components/schemas/StrictlyPositiveDecimal'
+          $ref: '#/components/schemas/PositiveNonZeroDecimal'
     Assurance:
       description: Data Type "Assurance" of Spec Version 2
+      title: Assurance
       type: object
       required:
       - assurance
@@ -548,58 +590,9 @@ components:
       enum:
       - Gate-to-Gate
       - Cradle-to-Gate
-    UNRegionOrSubregion:
-      description: List of UN regions and subregions
-      type: string
-      enum:
-      - Africa
-      - Americas
-      - Asia
-      - Europe
-      - Oceania
-      - Australia and New Zealand
-      - Central Asia
-      - Eastern Asia
-      - Eastern Europe
-      - Latin America and the Caribbean
-      - Melanesia
-      - Micronesia
-      - Northern Africa
-      - Northern America
-      - Northern Europe
-      - Polynesia
-      - South-eastern Asia
-      - Southern Asia
-      - Southern Europe
-      - Sub-Saharan Africa
-      - Western Asia
-      - Western Europe
-    ISO3166CC:
-      type: string
-    BadRequest:
-      description: Response with an error code of `BadRequest`. See Chapter "Error
-        Codes" of the Tech Specs for mor details.
-      type: object
-      required:
-      - code
-      - message
-      properties:
-        message:
-          type: string
-        code:
-          type: string
-    AccessDenied:
-      description: Response with an error code of `AccessDenied`. See Chapter "Error
-        Codes" of the Tech Specs for mor details.
-      type: object
-      required:
-      - code
-      - message
-      properties:
-        message:
-          type: string
-        code:
-          type: string
+
+    # -----------
+    # Event Types
     PathfinderEvent:
       description: possible contents of `data` property of events - see tech specs
         section 6 for details
@@ -664,14 +657,36 @@ components:
         pf: {}
         comment:
           type: string
-          nullable: true
+          nullable: true    
+    # ---------------
+    # Error Responses
+    ErrorResponse:
+      title: ErrorResponse
+      description: Response with an error code and descripton. See Chapter "Error
+        Codes" of the Tech Specs for more details.
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+            - BadRequest
+            - NotImplemented
+            - AccessDenied
+            - NoSuchFootprint
+            - TokenExpired
+            - InternalError
+        message:
+          type: string
+      required:
+      - code
+      - message
   securitySchemes:
     BearerAuth:
       description: OAuth2 Client Credentials Grant (RFC6749 4.4)
       type: oauth2
       flows:
         clientCredentials:
-          tokenUrl: '/2/auth/token'
+          tokenUrl: '/auth/token'
           scopes:
             footprint:list: Ability to list footprints
             footprint:read: Ability to access individual footprints
