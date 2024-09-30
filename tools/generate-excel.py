@@ -13,8 +13,31 @@ from openpyxl.styles import Alignment,PatternFill,Font
 
 def export_to_excel(ws, schema, types):
 
+    def format(item, style):
+        if style.get("word_wrap"):
+            alignment = Alignment(vertical="top", wrap_text=style.get("word_wrap"))
+        else: 
+            alignment = None
+        font = Font(name=style.get("font"), size=style.get("size"), bold=style.get("bold"), color=style.get("fgcolor"))
+
+        if style.get("bgcolor"):
+            fill = PatternFill(start_color=style.get("bgcolor"), end_color=style.get("bgcolor"), fill_type="solid")
+        else:
+            fill = None
+
+        if not isinstance(item, tuple):
+            item = [item]
+        for cell in item:
+            if alignment:
+                cell.alignment = alignment 
+            if font:
+                cell.font = font
+            if fill:
+                cell.fill = fill            
+
     # Append the title and header rows
-    ws.append(["PACT Simplified Tech Specs", schema["info"]["version"], "", "", "", "", "", "", "", ""])
+    ws.append(["PACT Simplified Tech Specs", "", "", "", "", "", "", "", "", "", ""])
+    ws.append([schema["info"]["version"], "", "", "", "", "", "", "", "", ""])
     ws.append([
         "Property",                     # Column A
         "Mandatory?",	                # Column B
@@ -27,7 +50,8 @@ def export_to_excel(ws, schema, types):
         "Example 2 (Dummy data)",	    # Column I
         "Example 3 (Dummy data)"        # Column J
     ])
-    ws.append(["", "", "", "", "", "", "", "", "", ""])
+    # TODO: descriptions
+    ws.append(["description", "description", "", "", "", "", "", "", "", ""])
 
     # Set cell widths
     ws.column_dimensions["A"].width = 30
@@ -41,25 +65,22 @@ def export_to_excel(ws, schema, types):
     ws.column_dimensions["I"].width = 30
     ws.column_dimensions["J"].width = 30
 
+    
     fontname = "Aptos Narrow"
-    title_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
-    title_fill = PatternFill(start_color="465C66", end_color="465C66", fill_type="solid")
-    title_font = Font(color="FFFFFF", bold=False, size=14, name=fontname)
-    header_fill = PatternFill(start_color="113377", end_color="113377", fill_type="solid")
-    header_fill = PatternFill(start_color="09094E", end_color="09094E", fill_type="solid")
-    header_font = Font(color="FFFFFF", bold=False, name=fontname)
-    property_font = Font(name=fontname)
-    property_name_font = Font(bold=True, name=fontname)
+    title_style = dict(font = fontname, size = 16, bold = True, bgcolor = "465C66", fgcolor = "FFFFFF")
+    subtitle_style = dict(font = fontname, size = 16, bold = False, bgcolor = "465C66", fgcolor = "FFFFFF")
+    header_style = dict(font = fontname, bgcolor = "D9D9D9")
+    heading_style = dict(font = fontname, bold = True, bgcolor = "09094E")
+    normal_style = dict(font = fontname)
+    bold_style = dict(font = fontname, bold = True)
+    wrap_style = dict(font = fontname, word_wrap = True)
 
     # format the first rows with the title fill
-    for row in ws[1 : 2]:
-        for cell in row:
-            cell.fill = title_fill
-            cell.font = title_font
-    for row in ws[2 : ws.max_row]:
-        for cell in row:
-            cell.fill = title_fill
-            cell.font = header_font
+    format(ws[1], title_style)
+    format(ws[2], subtitle_style)
+    format(ws[3], header_style)
+    format(ws[4], header_style)
+    format(ws["B4"], normal_style)
 
     # Inner function to write a property to the worksheet
     def write_property(name, info, level):
@@ -69,9 +90,14 @@ def export_to_excel(ws, schema, types):
         if type == "object":
             write_type(name, info, level + 1)
             return
+        
+        type_description = type
+        if type == "array":
+            type_description += " of " + info["items"].get("type", "object")
 
-        type += " " + info.get("format", "")
-        type += " " + info.get("comment", "")
+        type_description += " " + info.get("format", "")
+        type_description += " " + info.get("comment", "")
+        type_description += "\r\n" + "|".join(info.get("enum", []))
 
         description = info.get("description", "N/A")
         examples = info.get("examples", []) + ['','','']
@@ -85,16 +111,19 @@ def export_to_excel(ws, schema, types):
             "-",
             description.rstrip(), # remove last newline from the description
             "-",
-            type, 
+            type_description.strip(), 
             examples[0],
             examples[1],
             examples[2]
             ])
         # Indent the first cell of the row just added
-        for cell in ws[ws.max_row]:
-            cell.font = property_font
+        format(ws[ws.max_row], normal_style)
+        format(ws[ws.max_row][0], bold_style)
         ws[ws.max_row][0].alignment = Alignment(indent=level)
-        ws[ws.max_row][0].font = property_name_font
+
+        if info.get("type", None) == "array" and info["items"].get("type") == "object":
+            write_type(None, info["items"], level + 1)
+
 
         
     # Inner function to write a type to the worksheet
@@ -102,9 +131,7 @@ def export_to_excel(ws, schema, types):
         if info.get("title"):
             # Append a row for the type itself and set background color to blue
             ws.append([name + ": " + info["title"], "", "", "", "", "", "", "", "", ""])
-            for cell in ws[ws.max_row]:
-                cell.fill = header_fill
-                cell.font = header_font
+            format(ws[ws.max_row], heading_style)
 
         for prop_name, prop_info in info.get("properties", {}).items():
             # Extract the type and description of the property
@@ -126,19 +153,23 @@ def export_to_excel(ws, schema, types):
     for cell in ws["E"]:
         cell.alignment = Alignment(wrap_text=True, vertical="top")
 
+# check if not debugging:
+if True:
+    # input_path = "pact-openapi-2.2.1-wip.yaml"
+    input_path = "pact-openapi-2.2.0.yaml"
+else:
+    if len(sys.argv) < 2:
+        print("Usage: python3 generate-excel.py <input-path>")
+        print("This script generates an Excel file from a OpenAPI schema.")
+        print("")
+        print("Example:")
+        print("python3 generate-excel pact-openapi-2.2.1-wip.yaml")
+        print()
+        exit()
+    input_path = sys.argv[1]
 
-if len(sys.argv) < 2:
-    print("Usage: python3 generate-excel.py <input-path>")
-    print("This script generates an Excel file from a OpenAPI schema.")
-    print("")
-    print("Example:")
-    print("python3 generate-excel pact-openapi-2.2.1-wip.yaml")
-    print()
-    exit()
-
+    
 # Load the schema from the file
-input_path = sys.argv[1]
-# input_path = "pact-openapi-2.2.0.yaml"
 with open(input_path) as file:
     schema1 = yaml.safe_load(file)
 schema = jsonref.replace_refs(schema1, merge_props=True)
@@ -147,6 +178,7 @@ schema = jsonref.replace_refs(schema1, merge_props=True)
 wb = Workbook()
 ws = wb.active
 ws.title = "PACT Simplified Data Model"
+ws.sheet_view.zoomScale = 140
 
 export_to_excel(ws, schema, ["ProductFootprint"])
 
