@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: PACT API Specification
-  summary: Technical Specifications for PCF Data Exchange (Version 2.2.1-wip)
-  version: 2.2.1-wip
+  summary: Technical Specifications for PCF Data Exchange (Version 2.3.0)
+  version: 2.3.0
   contact: 
     name: WBCSD PACT Project
     url: https://github.com/wbcsd
