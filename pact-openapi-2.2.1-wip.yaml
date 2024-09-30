@@ -244,13 +244,13 @@ components:
         created:
           description: >
             The date and time when the PCF was created. This is typically an automatically 
-            generated field by the technology solution.
+            generated field by the software solution.
           type: string
           format: date-time
         updated:
           description: >
             The date and time when the PCF was last updated. This is typically an automatically 
-            generated field by the technology solution. If the data has never been updated, 
+            generated field by the software solution. If the data has never been updated, 
             leave blank.
           type: string
           format: date-time
@@ -355,7 +355,7 @@ components:
       description: ^
         The CarbonFootprint represents the carbon footprint of a product and related data 
         in accordance with the PACT Framework.
-      title: ProductFootprint,
+      title: CarbonFootprint,
       type: object
       required:
       - declaredUnit
@@ -484,6 +484,7 @@ components:
             umber can be used to track the age and accuracy of the GWP values used in 
             reporting. This field indicates the IPCC version of the GWP characterization 
             factors used in the calculation of the PCF.
+          deprecated: true
           type: string
           enum:
             - AR6
