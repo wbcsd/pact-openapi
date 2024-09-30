@@ -295,7 +295,7 @@ components:
             multiple identifiers. A list of only one identifier is also valid. The format 
             of each companyID must be provided as a URN (Uniform Resource Name), which 
             helps ensure the data provided is standardized and can be interpreted by the 
-            receiving system.      
+            receiving system.
           type: array
           minItems: 1
           uniqueItems: true
@@ -496,6 +496,8 @@ components:
           minItems: 1
           uniqueItems: true
         biogenicAccountingMethodology:
+          description: >
+            Name of the standard followed to account for biogenic emissions and removals.
           type: string
           enum:
             - PEF
@@ -503,11 +505,24 @@ components:
             - GHGP
             - Quantis
         boundaryProcessesDescription:
+          description: >  
+            Brief description of the processes attributable to each life cycle stage included 
+            in the PCF (e.g. electricity consumption for manufacturing), especially those 
+            that significantly contribute manufacturing steps of the product (including 
+            general description of used technologies).
           type: string
         referencePeriodStart:
+          description: >
+            The start date and time of the earliest activity data used to calculate the 
+            PCF. This start date can be considered the start of the period over which 
+            the given PCF is referencing, or reporting on.
           type: string
           format: date-time
         referencePeriodEnd:
+          description: >
+            The end date and time of the latest activity data used to calculate the PCF. 
+            This end date can be considered the end of the period over which the given 
+            PCF is referencing, or reporting on.
           type: string
           format: date-time
         geographyRegionOrSubregion:
@@ -569,45 +584,80 @@ components:
             - US-CA
             - DE-BW
         secondaryEmissionFactorSources:
+          description: >
+            The list of secondary data sources and versions which have been used by 
+            you or by suppliers (e.g. data bases such as ecoinvent) for the PCF 
+            calculation
           type: array
           minItems: 1
           items:
             $ref: '#/components/schemas/EmissionFactorDS'
         exemptedEmissionsPercent:
+          description: >
+            Percentage of emissions EXCLUDED from the cradle to gate PCF in total. 
+            The percentage MUST be expressed as a decimal number, and SHOULD comply 
+            with the Framework (a maximum of 5% of the cradle to gate PCF emissions 
+            may be excluded) as well as any relevant sector specific guidelines 
+            referring to exemption rules/cut-off criteria.
           $ref: '#/components/schemas/Percent'
           maximum: 5
         exemptedEmissionsDescription:
+          description: >
+            If emissions exempted, rationale behind exclusion of specific PCF emissions.
           type: string
         packagingEmissionsIncluded:
+          description: >
+            True or False to indicate whether packaging emissions are including in the PCF.
           type: boolean
         packagingGhgEmissions:
+          description: >
+            Emissions resulting from the packaging of the product. The value MUST NOT 
+            be defined if packagingEmissionsIncluded is False.
           $ref: '#/components/schemas/PositiveOrZeroDecimal'
+          x-pact-unit: kgCO2e/declared unit
         allocationRulesDescription:
+          description: >
+            Description of the allocation rules applied to the PCF's foreground data 
+            including an explanation of the underlying reasons (way of allocating 
+            all activities from your manufacturing steps to the declared unit).
           type: string
           nullable: true
         uncertaintyAssessmentDescription:
+          description: >
+            Results, key drivers, and a short qualitative description of the 
+            uncertainty assessment, if applicable.
           type: string
           nullable: true
         primaryDataShare:
+          description: >
+            Share of primary data in the final PCF, calculated according to 
+            the Framework.
           $ref: '#/components/schemas/Percent'
         dqi:
+          description: >
+            Data Quality Indicators (dqi) in accordance with the Framework. 
           $ref: '#/components/schemas/DataQualityIndicators'
         assurance:
+          description: >
+            If present, the Assurance information in accordance with Framework.
           $ref: '#/components/schemas/Assurance'
           nullable: true
 
     PositiveNonZeroDecimal:
       type: string
       pattern: '^(\\d*[1-9]\\d*([\\.]\\d+)?|\\d+(\\.\\d*[1-9]\\d*)?)$'
+      comment: A decimal number > 0.
     PositiveOrZeroDecimal:
       type: string
       pattern: '^\\d+(\\.\\d+)?$'
+      comment: A decimal number >= 0.
     Decimal:
       type: string
       pattern: '^-?\\d+(\\.\\d+)?$'
     NegativeOrZeroDecimal:
       type: string
       pattern: '^(-\\d+(\\.\\d+)?)|0$'
+      comment: A decimal number <= 0.
     ProductOrSectorSpecificRule:
       type: object
       required:
@@ -615,12 +665,20 @@ components:
       - ruleNames
       properties:
         operator:
+          description: >
+            Selection of operator of PCR being used for the PCF calculation. If 
+            operator is not available in the given list, or if you have followed
+            a sector specific guidance, please select "Other" and include details 
+            under "otherOperatorName".
           type: string
           enum:
             - PEF
             - EPD International
             - Other
         ruleNames:
+          description: >
+            Names of the product or sector specific rules being used for the PCF 
+            calculation.
           type: array
           items:
             type: string
@@ -628,7 +686,11 @@ components:
           minItems: 1
           uniqueItems: true
         otherOperatorName:
-          $ref: '#/components/schemas/NonEmptyString'
+          description: >
+            If operator is Other, then this attribute must be populated with the name 
+            of the operator.
+          type: string
+          minLength: 1
     EmissionFactorDS:
       type: object
       required:
@@ -636,14 +698,18 @@ components:
       - version
       properties:
         name:
+          description: >
+            Name of the secondary emission factor databases
           $ref: '#/components/schemas/NonEmptyString'
         version:
+          description: >
+            Version of the secondary emission factor databases
           $ref: '#/components/schemas/NonEmptyString'
     Percent:
       type: number
       format: double
-      maximum: 100
       minimum: 0
+      maximum: 100
     DataQualityIndicators:
       description: Data Type "DataQualityIndicators" of Spec Version 2
       title: DataQualityIndicators
@@ -657,16 +723,44 @@ components:
       - reliabilityDQR
       properties:
         coveragePercent:
+          description: >
+            Percentage of PCF included in the data quality assessment based on 
+            the >5% emissions threshold.
           $ref: '#/components/schemas/Percent'
         technologicalDQR:
+          description: >
+            Quantitative data quality rating (DQR) based on the data quality matrix
+            (Framework Table 9), scoring the technological representativeness of the 
+            sources used for PCF calculation based on weighted average of all inputs 
+            representing >5% of PCF emissions.
           $ref: '#/components/schemas/PositiveNonZeroDecimal'
         temporalDQR:
+          description: >
+            Quantitative data quality rating (DQR) based on the data quality matrix 
+            (Framework Table 9), scoring the temporal representativeness of the sources 
+            used for PCF calculation based on weighted average of all inputs 
+            representing >5% of PCF emissions.
           $ref: '#/components/schemas/PositiveNonZeroDecimal'
         geographicalDQR:
+          description: >
+            Quantitative data quality rating (DQR) based on the data quality matrix 
+            (Framework Table 9), scoring the geographical representativeness of the 
+            sources used for PCF calculation based on weighted average of all inputs 
+            representing >5% of PCF emissions.
           $ref: '#/components/schemas/PositiveNonZeroDecimal'
         completenessDQR:
+          description: >
+            Quantitative data quality rating (DQR) based on the data quality matrix 
+            (Framework Table 9), scoring the completeness of the data collected for 
+            PCF calculation based on weighted average of all inputs representing 
+            >5% of PCF emissions.
           $ref: '#/components/schemas/PositiveNonZeroDecimal'
         reliabilityDQR:
+          description: >
+            Quantitative data quality rating (DQR) based on the data quality matrix 
+            (Framework Table 9), scoring the reliability of the data collected for 
+            PCF calculation based on weighted average of all inputs representing 
+            >5% of PCF emissions.
           $ref: '#/components/schemas/PositiveNonZeroDecimal'
     Assurance:
       description: Data Type "Assurance" of Spec Version 2
@@ -677,8 +771,12 @@ components:
       - providerName
       properties:
         assurance:
+          description: >
+            True or False to indicate whether the PCF has been assured in line with the Framework.
           type: boolean
         coverage:
+          description: >
+            Level of granularity of the emissions data assured
           type: string
           enum:
             - corporate level
@@ -686,27 +784,39 @@ components:
             - PCF system
             - product level
         level:
+          description: >
+            Level of assurance applicable to the PCF
           type: string
           enum:
             - limited
             - reasonable
           nullable: true
         boundary:
+          description: >
+            Boundary of the assurance
           type: string
           enum:
           - Gate-to-Gate
           - Cradle-to-Gate
           nullable: true
         providerName:
+          description: >
+            Name of the independent third party engaged to undertake assurance
           type: string
         completedAt:
+          description: >
+            The date at which the assurance was completed
           type: string
           format: date-time
           nullable: true
         standardName:
+          description: >
+            Name of the standard against which the PCF was assured
           type: string
           nullable: true
         comments:
+          description: >
+            Any additional comments that will clarify the interpretation of the assurance.
           type: string
           nullable: true
 
@@ -717,7 +827,7 @@ components:
         section 6 for details
       type: object
       oneOf:
-      - description: "the contents of the `data` field of a `PF Update Event` – see
+      - description: "the contents of the `data` field of a `PF Update Event` - see
           Tech Specs section 6.8.3"
         type: object
         required:

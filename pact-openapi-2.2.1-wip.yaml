@@ -296,7 +296,7 @@ components:
             multiple identifiers. A list of only one identifier is also valid. The format 
             of each companyID must be provided as a URN (Uniform Resource Name), which 
             helps ensure the data provided is standardized and can be interpreted by the 
-            receiving system.          
+            receiving system.
           type: array
           minItems: 1
           uniqueItems: true
@@ -355,7 +355,7 @@ components:
       description: ^
         The CarbonFootprint represents the carbon footprint of a product and related data 
         in accordance with the PACT Framework.
-      title: CarbonFootprint,
+      title: CarbonFootprint
       type: object
       required:
       - declaredUnit
