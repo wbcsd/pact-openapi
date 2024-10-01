@@ -10,7 +10,7 @@ build:
 	python3 tools/generate-excel.py pact-openapi-2.2.0.yaml
 	python3 tools/generate-excel.py pact-openapi-2.3.0.yaml 
 	echo '<html>' > index.html
-	echo '<head><style>body { font-family: sans-serif; color: black; margin: 2em; } h1,h2,h3,a { color: rgb(0, 90, 156); } a:not([href]) { color: darkgray; }] </style></head><body>' >> index.html
+	echo '<head><style>body { font-family: sans-serif; color: black; margin: 1em; } h1,h2,h3,a { color: rgb(0, 90, 156); } a:not([href]) { color: darkgray; }] </style></head><body>' >> index.html
 	echo '<h1>PACT OpenAPI Schema</h1>' >> index.html
 	echo '<p>This page contains the OpenAPI schemas and the Simplified Data Model in Excel format for recent and upcoming versions of the PACT Data Model.</p>' >> index.html
 	echo '<p>For more information, please visit the <a href="https://carbon-transparency.org/">PACT website</a> and the <a href="https://github.com/wbcsd/pact-openapi">WBCSD GitHub repository</a>.</p>' >> index.html
