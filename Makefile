@@ -18,8 +18,3 @@ build:
 	cp *.yaml $(OUTDIR)
 	mv *.xlsx $(OUTDIR)
 	mv index.html $(OUTDIR)
-
-
-	
-
-
