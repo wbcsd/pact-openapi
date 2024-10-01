@@ -100,7 +100,7 @@ def export_to_excel(ws, schema, types):
         return type_description
 
     # Inner function to write a property to the worksheet
-    def write_property(name, info, level):
+    def write_property(name, info, parent, level):
         # Extract the type and description of the property
         type = info.get("type", "")
         
@@ -111,7 +111,7 @@ def export_to_excel(ws, schema, types):
         type_description = get_type_description(info)
         description = info.get("description", "N/A")
         examples = info.get("examples", []) + ['','','']
-        mandatory = name in info.get("required", [])
+        mandatory = name in parent.get("required", [])
         
         # Append a row to the worksheet
         ws.append([
@@ -145,7 +145,7 @@ def export_to_excel(ws, schema, types):
 
         for prop_name, prop_info in info.get("properties", {}).items():
             # Extract the type and description of the property
-            write_property(prop_name, prop_info, level)
+            write_property(prop_name, prop_info, info, level)
 
 
     # Find the specified types in the schema
