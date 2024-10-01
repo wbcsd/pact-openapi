@@ -367,7 +367,7 @@ components:
       - fossilCarbonContent
       - biogenicCarbonContent
       - characterizationFactors
-      - ipccCharacterizationFactorsSources
+      - ipccCharacterizationFactors
       - crossSectoralStandardsUsed
       - boundaryProcessesDescription
       - exemptedEmissionsPercent
@@ -485,11 +485,13 @@ components:
             reporting. This field indicates the IPCC version of the GWP characterization 
             factors used in the calculation of the PCF.
           deprecated: true
+          comment: This property is deprecated and only kept to ensure backwards-compatibility. 
+            It will be removed in version 3. It is replaced by ipccCharacterizationFactors.
           type: string
           enum:
             - AR6
             - AR5
-        ipccCharacterizationFactorsSources:
+        ipccCharacterizationFactors:
           description: >              
             "The IPCC (Intergovernmental Panel of Climate Change) frequently releases (GWP) 
             global warming potential values for climate gases related to CO2. These GWP 
@@ -518,6 +520,31 @@ components:
               - GHG Protocol Product standard
               - ISO Standard 14067
               - ISO Standard 14044
+          minItems: 1
+          uniqueItems: true
+          deprecated: true
+          comment: This property is deprecated and only kept to ensure backwards-
+            compatibility. It will be removed in version 3. It does not replace the 
+            (also mandatory) property crossSectoralStandards.
+        crossSectoralStandards:
+          description: >
+            The cross-sectoral standards applied for calculating or allocating GHG 
+            emissions. If multiple apply, list all.
+          type: array
+          items:
+            type: string
+            enum:
+              - ISO14067
+              - ISO14083
+              - ISO14040-44
+              - GHGP-Product
+              - PEF
+              - PACT-1.0
+              - PACT-2.0
+              - PACT-2.1
+              - PACT-2.2
+              - PACT-2.3
+              # - PACT Methodology 3.0
           minItems: 1
           uniqueItems: true
         productOrSectorSpecificRules:
