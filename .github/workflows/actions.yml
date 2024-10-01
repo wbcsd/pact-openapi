@@ -5,17 +5,38 @@
         - main
   
   jobs:
-    build: 
+    # build: 
+    #   runs-on: ubuntu-latest
+    #   steps:
+    #     - name: checkout
+    #       uses: actions/checkout@v4
+    #     - name: setup python
+    #       uses: actions/setup-python@v5
+    #       with:
+    #         python-version: '3.12'
+    #     - name: install dependencies
+    #       run: pip install -r tools/requirements.txt
+    #     - name: run script
+    #       run: python tools/generate-excel.py
+    deploy:
+      environment:
+        name: github-pages
+        url: ${{ steps.deployment.outputs.page_url }}
       runs-on: ubuntu-latest
       steps:
-        - name: checkout
-          uses: actions/checkout@v4
-        - name: setup python
-          uses: actions/setup-python@v5
-          with:
-            python-version: '3.12'
-        - name: install dependencies
+        - name: Checkout
+          uses: actions/checkout@v3
+        - name: Setup Pages
+          uses: actions/configure-pages@v2
+        - name: Install tooling
           run: pip install -r tools/requirements.txt
-        - name: run script
-          run: python tools/generate-excel.py
-
+        - name: Build docs
+          run: make
+        - name: Upload docs
+          uses: actions/upload-pages-artifact@v1
+          with:
+            # Upload entire repository
+            path: "upload"
+        - name: Deploy to GitHub Pages
+          id: deployment
+          uses: actions/deploy-pages@v1
