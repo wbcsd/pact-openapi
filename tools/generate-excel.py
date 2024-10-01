@@ -14,10 +14,10 @@ from openpyxl.styles import Alignment,PatternFill,Font
 def export_to_excel(ws, schema, types):
 
     def format(item, style):
-        if style.get("word_wrap"):
-            alignment = Alignment(vertical="top", wrap_text=style.get("word_wrap"))
-        else: 
-            alignment = None
+        #if style.get("word_wrap"):
+        #    alignment = Alignment(vertical="top", wrap_text=style.get("word_wrap"))
+        #else: 
+        alignment = None
         font = Font(name=style.get("font"), size=style.get("size"), bold=style.get("bold"), color=style.get("fgcolor"))
 
         if style.get("bgcolor"):
@@ -70,7 +70,7 @@ def export_to_excel(ws, schema, types):
     title_style = dict(font = fontname, size = 16, bold = True, bgcolor = "465C66", fgcolor = "FFFFFF")
     subtitle_style = dict(font = fontname, size = 16, bold = False, bgcolor = "465C66", fgcolor = "FFFFFF")
     header_style = dict(font = fontname, bgcolor = "D9D9D9")
-    heading_style = dict(font = fontname, bold = True, bgcolor = "09094E")
+    heading_style = dict(font = fontname, bold = True, bgcolor = "09094E", fgcolor = "FFFFFF")
     normal_style = dict(font = fontname)
     bold_style = dict(font = fontname, bold = True)
     wrap_style = dict(font = fontname, word_wrap = True)
@@ -82,6 +82,23 @@ def export_to_excel(ws, schema, types):
     format(ws[4], header_style)
     format(ws["B4"], normal_style)
 
+
+    def get_type_description(info):
+        type_description = ""
+        if info.get("type", "") == "array":
+            type_description = "list of " + get_type_description(info["items"])
+        if info.get("type", "") == "object":
+            type_description = "object"
+        type_description += " " + info.get("format", "") + "\n"
+        type_description += " " + info.get("comment", "") + "\n"
+        type_description += "|".join(info.get("enum", [])) + "\n"
+        type_description = type_description.strip()
+        if (type_description == ""):
+            type_description = info.get("type","")
+        elif not info.get("type","") in ["object","array"]:
+            type_description += "\n(" + info.get("type","") + ")"
+        return type_description
+
     # Inner function to write a property to the worksheet
     def write_property(name, info, level):
         # Extract the type and description of the property
@@ -91,14 +108,7 @@ def export_to_excel(ws, schema, types):
             write_type(name, info, level + 1)
             return
         
-        type_description = type
-        if type == "array":
-            type_description += " of " + info["items"].get("type", "object")
-
-        type_description += " " + info.get("format", "")
-        type_description += " " + info.get("comment", "")
-        type_description += "\r\n" + "|".join(info.get("enum", []))
-
+        type_description = get_type_description(info)
         description = info.get("description", "N/A")
         examples = info.get("examples", []) + ['','','']
         mandatory = name in info.get("required", [])
@@ -111,7 +121,7 @@ def export_to_excel(ws, schema, types):
             "-",
             description.rstrip(), # remove last newline from the description
             "-",
-            type_description.strip(), 
+            type_description, 
             examples[0],
             examples[1],
             examples[2]
@@ -140,7 +150,6 @@ def export_to_excel(ws, schema, types):
 
     # Find the specified types in the schema
     for name in types:
-        print(name)
         type = schema["components"]["schemas"][name]
         write_type(name, type)
 
@@ -152,9 +161,11 @@ def export_to_excel(ws, schema, types):
         cell.alignment = Alignment(vertical="top")
     for cell in ws["E"]:
         cell.alignment = Alignment(wrap_text=True, vertical="top")
+    for cell in ws["G"]:
+        cell.alignment = Alignment(wrap_text=True, vertical="top")
 
 # check if not debugging:
-if True:
+if False:
     # input_path = "pact-openapi-2.2.1-wip.yaml"
     input_path = "pact-openapi-2.2.0.yaml"
 else:
