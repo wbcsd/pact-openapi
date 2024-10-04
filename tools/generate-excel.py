@@ -122,9 +122,9 @@ def export_to_excel(ws, schema, types):
             description.rstrip(), # remove last newline from the description
             "-",
             type_description, 
-            examples[0],
-            examples[1],
-            examples[2]
+            str(examples[0]),
+            str(examples[1]),
+            str(examples[2])
             ])
         # Indent the first cell of the row just added
         format(ws[ws.max_row], normal_style)
