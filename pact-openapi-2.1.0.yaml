@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: PACT API Specification
-  summary: Technical Specifications for PCF Data Exchange (Version 2.3.0)
-  version: 2.3.0
+  summary: Technical Specifications for PCF Data Exchange (Version 2.1.0)
+  version: 2.1.0
   contact: 
     name: WBCSD PACT Project
     url: https://github.com/wbcsd
@@ -10,12 +10,9 @@ info:
   description: >
     This document describes the technical specifications for the exchange of 
     Product Carbon Footprint (PCF) data between systems. The specification is 
-    maintained by the WBCSD PACT project and intended to be used by organizations 
+    maintained by the WBCSD PACT project and  intended to be used by organizations 
     that wish to exchange PCF data with other organizations. The specifications 
-    are designed to be technology-agnostic.
-servers: 
-- url: https://dev.wbcsd.org/pact/2
-  description: Development server
+    are designed to be technology-agnostic. 
 paths:
   /footprints:
     get:
@@ -104,6 +101,7 @@ paths:
           content:
             application/json:
               schema:
+                description: HTTP Body of Action `GetFootprint`
                 type: object
                 required:
                 - data
@@ -183,7 +181,7 @@ components:
       description: >
         The ProductFootprint is a data type which represents the footprint
         of a product under a specific scope (§ 5.2.1 Scope of a Footprint) 
-        and with values calculated in accordance with the PACT Methodology.
+        and with values calculated in accordance with the PACT Framework.
         
         Conceptually, the data type ProductFootprint is modeled as a multi-purpose 
         container for product-specific emissions factors which is supported by 
@@ -222,11 +220,11 @@ components:
         specVersion:
           description: >
             The version of the PACT Tech Specs that the data being shared complies with. 
-            This is a string in the format of "major.minor.patch" (e.g. "2.3.0").
+            This is a string in the format of "major.minor.patch" (e.g. "2.1.0").
           type: string
           pattern: '^\d+\.\d+\.\d+(-\d{8})?$'
           examples:
-          - "2.3.0"
+          - "2.1.0"
         precedingPfIds:
           description: >
             A given PCF may change over time, due to updates to the calculation. 
@@ -247,6 +245,7 @@ components:
             If changes are made to the PCF, this version number will increment.
           type: integer
           format: int32
+          maximum: 2147483647
           minimum: 0
           examples:
           - 1
@@ -254,16 +253,13 @@ components:
         created:
           description: >
             The date and time when the PCF was created. This is typically an automatically 
-            generated field by the software solution.
+            generated field by the technology solution.
           type: string
           format: date-time
         updated:
-          description: >
-            The date and time when the PCF was last updated. This is typically an automatically 
-            generated field by the software solution. If the data has never been updated, 
-            leave blank.
           type: string
           format: date-time
+          nullable: true
         status:
           description: >
             The status of the PCF. Active means that the PCF is the most recent version 
@@ -277,6 +273,7 @@ components:
             - Deprecated
         statusComment:
           type: string
+          nullable: true          
           description: >
             A descriptive reasoning explaining the current status of the PCF, what was 
             changed since the last version, etc.
@@ -289,11 +286,13 @@ components:
             PCF is valid for 3 years, beginning with the referencePeriodEnd. 
           type: string
           format: date-time
+          nullable: true
         validityPeriodEnd:
           description: >
             The end date and time of the validity period. See validityPeriodStart for more details.
           type: string
           format: date-time
+          nullable: true
         companyName:
           description: >
             The (legal) name of the company supplying the product and reporting the PCF (aka the data owner)
@@ -315,9 +314,7 @@ components:
         productDescription:
           description: >
             A description of the product, including any additional relevant information 
-            such as production technology, production technology, packaging, process, feedstock 
-            and technical parameters (e.g. dimensions). Products which are services 
-            (i.e. consulting) should include a short description of the service.
+            such as production technology, packaging, feedstock and technical parameters.
           type: string
         productIds:
           description: >
@@ -333,17 +330,7 @@ components:
           description: >
             The UN Central Product Classification Code (CPC) for the given product. The relevant 
             CPC code may be identified here https://unstats.un.org/unsd/classifications/Econ/cpc 
-            Advisement: This property will become optional in v3
           $ref: '#/components/schemas/NonEmptyString'
-        productClassifications:
-          description: >
-            A list of classification or category identifiers in URN format. Use well known urn's here, 
-            or adhere to recommended urn:pact: format. This replaces the productCategoryCpc property.
-          type: array
-          minItems: 1
-          uniqueItems: true
-          items:
-            $ref: '#/components/schemas/Urn'
         productNameCompany:
           description: >
             The trade name of the product in order for it to be recognizable by the receiver of the PCF information
@@ -354,7 +341,6 @@ components:
             contains product-level information, comment should be used for information and instructions 
             related to the calculation of the PCF, or other information which informs the ability to interpret
             (e.g. LUC not included as unable to calculate LUC), to audit or to verify the PCF          
-            Advisement: This property will become OPTIONAL in version 3 of the Technical Specifications.
           type: string
         pcf:
           $ref: '#/components/schemas/CarbonFootprint'
@@ -367,7 +353,7 @@ components:
     CarbonFootprint:
       description: ^
         The CarbonFootprint represents the carbon footprint of a product and related data 
-        in accordance with the PACT Methodology.
+        in accordance with the PACT Framework.
       title: CarbonFootprint
       type: object
       required:
@@ -380,29 +366,13 @@ components:
       - fossilCarbonContent
       - biogenicCarbonContent
       - characterizationFactors
-      - ipccCharacterizationFactors
+      - ipccCharacterizationFactorsSources
       - crossSectoralStandardsUsed
       - boundaryProcessesDescription
       - exemptedEmissionsPercent
       - exemptedEmissionsDescription
       - packagingEmissionsIncluded
       - productOrSectorSpecificRules
-      oneOf:
-      - oneOf:
-        - required:
-          - geographyRegionOrSubregion
-        - required:
-          - geographyCountry
-        - required:
-          - geographyCountrySubdivision
-      - not:
-          anyOf:
-          - required:
-            - geographyRegionOrSubregion
-          - required:
-            - geographyCountry
-          - required:
-            - geographyCountrySubdivision
       properties:
         declaredUnit:
           description: >
@@ -462,6 +432,7 @@ components:
           description: >
             GHG emissions and removals associated with land-management-related changes, 
             including non-CO2 sources.
+            Note: version 1 did not explictly include non-CO2 sources. This is now included in the definition.
           x-pact-unit: kgCO2e/declared unit
           $ref: '#/components/schemas/PositiveOrZeroDecimal'
         otherBiogenicGhgEmissions:
@@ -469,6 +440,7 @@ components:
             All other biogenic GHG emissions associated with product manufacturing and transport 
             that are not included in dLUC (dLucGhgEmissions), iLUC (iLucGhgEmissions), and land 
             management (landManagementGhgEmissions). 
+            Note: version 1.0.0 incorrectly defined this is "all other GHG emissions"; i.e. missing the "biogenic" qualifier.
           x-pact-unit: kgCO2e/declared unit
           $ref: '#/components/schemas/PositiveOrZeroDecimal'
         iLucGhgEmissions:
@@ -497,36 +469,13 @@ components:
             umber can be used to track the age and accuracy of the GWP values used in 
             reporting. This field indicates the IPCC version of the GWP characterization 
             factors used in the calculation of the PCF.
-            Advisement: This property is DEPRECATED and only kept to ensure backwards-compatibility. It will be removed in version 3 of these Technical Specifications. It does not replace the (also mandatory) property <{CarbonFootprint/ipccCharacterizationFactorsSources}>.
-          deprecated: true
-          comment: This property is deprecated and only kept to ensure backwards-compatibility. 
-            It will be removed in version 3. It is replaced by ipccCharacterizationFactors.
+            Advisement: The set of characterization factor identifiers will likely change in future revisions. It is recommended to account for this when implementing the validation of this property.
+
           type: string
           enum:
             - AR6
             - AR5
-        ipccCharacterizationFactors:
-          description: >              
-            "The IPCC (Intergovernmental Panel of Climate Change) frequently releases (GWP) 
-            global warming potential values for climate gases related to CO2. These GWP 
-            values are released in Assessment Reports (AR), which are numbered. The AR 
-            umber can be used to track the age and accuracy of the GWP values used in 
-            reporting. This field indicates the IPCC version of the GWP characterization 
-            factors used in the calculation of the PCF.
-
-            Per the PACT Methodology, the latest available characterization factor version shall 
-            be used, i.e., [""AR6""]. In the event this is not possible, include the set 
-            of all characterization factors used."
-          type: array
-          items:
-            type: string
-            pattern: '^AR\d+$'
-          minItems: 1
-          uniqueItems: true
         crossSectoralStandardsUsed:
-          description: >
-            The cross sectoral standard(s) used as a basis for the PCF calculation. 
-            If multiple apply, list all.
           type: array
           items:
             type: string
@@ -534,31 +483,6 @@ components:
               - GHG Protocol Product standard
               - ISO Standard 14067
               - ISO Standard 14044
-          minItems: 1
-          uniqueItems: true
-          deprecated: true
-          comment: This property is deprecated and only kept to ensure backwards-
-            compatibility. It will be removed in version 3. It does not replace the 
-            (also mandatory) property crossSectoralStandards.
-        crossSectoralStandards:
-          description: >
-            The cross-sectoral standards applied for calculating or allocating GHG 
-            emissions. If multiple apply, list all.
-          type: array
-          items:
-            type: string
-            enum:
-              - ISO14067
-              - ISO14083
-              - ISO14040-44
-              - GHGP-Product
-              - PEF
-              - PACT-1.0
-              - PACT-2.0
-              - PACT-2.1
-              - PACT-2.2
-              - PACT-2.3
-              # - PACT Methodology 3.0
           minItems: 1
           uniqueItems: true
         productOrSectorSpecificRules:
@@ -591,7 +515,6 @@ components:
             in the PCF (e.g. electricity consumption for manufacturing), especially those 
             that significantly contribute manufacturing steps of the product (including 
             general description of used technologies).
-            Advisement: This property will become OPTIONAL in version 3 of the Technical Specifications.
           type: string
         referencePeriodStart:
           description: >
@@ -678,16 +601,14 @@ components:
           description: >
             Percentage of emissions EXCLUDED from the cradle to gate PCF in total. 
             The percentage MUST be expressed as a decimal number, and SHOULD comply 
-            with the PACT Methodology (a maximum of 5% of the cradle to gate PCF emissions 
+            with the Framework (a maximum of 5% of the cradle to gate PCF emissions 
             may be excluded) as well as any relevant sector specific guidelines 
             referring to exemption rules/cut-off criteria.
-            Advisement: The upper boundary of this property (currently `5`) will be removed in version 3 of the Technical Specifications.
           $ref: '#/components/schemas/Percent'
           maximum: 5
         exemptedEmissionsDescription:
           description: >
             If emissions exempted, rationale behind exclusion of specific PCF emissions.
-          Advisement: This property will become OPTIONAL in version 3 of the Technical Specifications.
           type: string
         packagingEmissionsIncluded:
           description: >
@@ -705,40 +626,43 @@ components:
             including an explanation of the underlying reasons (way of allocating 
             all activities from your manufacturing steps to the declared unit).
           type: string
+          nullable: true
         uncertaintyAssessmentDescription:
           description: >
             Results, key drivers, and a short qualitative description of the 
             uncertainty assessment, if applicable.
           type: string
+          nullable: true
         primaryDataShare:
           description: >
             Share of primary data in the final PCF, calculated according to 
-            the PACT Methodology.
+            the Framework.
           $ref: '#/components/schemas/Percent'
         dqi:
           description: >
-            Data Quality Indicators (dqi) in accordance with the PACT Methodology. 
+            Data Quality Indicators (dqi) in accordance with the Framework. 
           $ref: '#/components/schemas/DataQualityIndicators'
         assurance:
           description: >
-            If present, the Assurance information in accordance with PACT Methodology.
+            If present, the Assurance information in accordance with Framework.
           $ref: '#/components/schemas/Assurance'
+          nullable: true
+
     PositiveNonZeroDecimal:
       type: string
-      pattern: ^[+]?(\d*[1-9]\d*)(\.\d+)?|(0+\.\d*[1-9]\d*)$
+      pattern: '^(\\d*[1-9]\\d*([\\.]\\d+)?|\\d+(\\.\\d*[1-9]\\d*)?)$'
+      comment: A decimal number > 0.
     PositiveOrZeroDecimal:
       type: string
-      pattern: ^[+]?\d+(\.\d+)?$
-      comment: A positive or zero decimal number.
+      pattern: '^\\d+(\\.\\d+)?$'
+      comment: A decimal number >= 0.
     Decimal:
       type: string
-      pattern: ^[+-]?\d+(\.\d+)?$
+      pattern: '^-?\\d+(\\.\\d+)?$'
     NegativeOrZeroDecimal:
       type: string
-      pattern: ^(-\d+(\.\d+)?)|0+(\.0+)?$
-    NegativeNonZeroDecimal:
-      type: string
-      pattern: ^-((\d*[1-9]\d*)(\.\d+)?|(0+\.\d*[1-9]\d*))$
+      pattern: '^(-\\d+(\\.\\d+)?)|0$'
+      comment: A decimal number <= 0.
     ProductOrSectorSpecificRule:
       type: object
       required:
@@ -811,35 +735,35 @@ components:
         technologicalDQR:
           description: >
             Quantitative data quality rating (DQR) based on the data quality matrix
-            (PACT Methodology Table 9), scoring the technological representativeness of the 
+            (Framework Table 9), scoring the technological representativeness of the 
             sources used for PCF calculation based on weighted average of all inputs 
             representing >5% of PCF emissions.
           $ref: '#/components/schemas/FloatBetween1And3'
         temporalDQR:
           description: >
             Quantitative data quality rating (DQR) based on the data quality matrix 
-            (PACT Methodology Table 9), scoring the temporal representativeness of the sources 
+            (Framework Table 9), scoring the temporal representativeness of the sources 
             used for PCF calculation based on weighted average of all inputs 
             representing >5% of PCF emissions.
           $ref: '#/components/schemas/FloatBetween1And3'
         geographicalDQR:
           description: >
             Quantitative data quality rating (DQR) based on the data quality matrix 
-            (PACT Methodology Table 9), scoring the geographical representativeness of the 
+            (Framework Table 9), scoring the geographical representativeness of the 
             sources used for PCF calculation based on weighted average of all inputs 
             representing >5% of PCF emissions.
           $ref: '#/components/schemas/FloatBetween1And3'
         completenessDQR:
           description: >
             Quantitative data quality rating (DQR) based on the data quality matrix 
-            (PACT Methodology Table 9), scoring the completeness of the data collected for 
+            (Framework Table 9), scoring the completeness of the data collected for 
             PCF calculation based on weighted average of all inputs representing 
             >5% of PCF emissions.
           $ref: '#/components/schemas/FloatBetween1And3'
         reliabilityDQR:
           description: >
             Quantitative data quality rating (DQR) based on the data quality matrix 
-            (PACT Methodology Table 9), scoring the reliability of the data collected for 
+            (Framework Table 9), scoring the reliability of the data collected for 
             PCF calculation based on weighted average of all inputs representing 
             >5% of PCF emissions.
           $ref: '#/components/schemas/FloatBetween1And3'
@@ -858,7 +782,7 @@ components:
       properties:
         assurance:
           description: >
-            True or False to indicate whether the PCF has been assured in line with the PACT Methodology.
+            True or False to indicate whether the PCF has been assured in line with the Framework.
           type: boolean
         coverage:
           description: >
@@ -876,31 +800,36 @@ components:
           enum:
             - limited
             - reasonable
+          nullable: true
         boundary:
           description: >
             Boundary of the assurance
           type: string
           enum:
-            - Gate-to-Gate
-            - Cradle-to-Gate
+          - Gate-to-Gate
+          - Cradle-to-Gate
+          nullable: true
         providerName:
           description: >
             Name of the independent third party engaged to undertake assurance
-            Advisement: Given this property was incorrectly and unintentionally published in V2 of the Technical Specifications as Mandatory, it will be reverted to Optional in version 3 of the Technical Specifications.
           type: string
         completedAt:
           description: >
             The date at which the assurance was completed
           type: string
           format: date-time
+          nullable: true
         standardName:
           description: >
             Name of the standard against which the PCF was assured
           type: string
+          nullable: true
         comments:
           description: >
             Any additional comments that will clarify the interpretation of the assurance.
           type: string
+          nullable: true
+
     # -----------
     # Event Types
     PathfinderEvent:
@@ -967,6 +896,7 @@ components:
         pf: {}
         comment:
           type: string
+          nullable: true    
     # ---------------
     # Error Responses
     ErrorResponse:

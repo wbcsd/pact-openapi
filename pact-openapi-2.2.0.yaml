@@ -212,26 +212,33 @@ components:
             A unique identifier that a system uses to refer to the entire dataset of the PCF. 
             This is typically an automatically-generated number by the technology solution to maintain 
             the required technical references to data within the system.
+            UUID v4 [RFC4122](https://tools.ietf.org/html/rfc4122).
           type: string
           format: uuid
+          examples:
+            - "f4b1225a-bd44-4c8e-861d-079e4e1dfd69"
         specVersion:
           description: >
             The version of the PACT Tech Specs that the data being shared complies with. 
             This is a string in the format of "major.minor.patch" (e.g. "2.2.0").
           type: string
           pattern: '^\d+\.\d+\.\d+(-\d{8})?$'
+          examples:
+          - "2.1.0"
         precedingPfIds:
           description: >
             A given PCF may change over time, due to updates to the calculation. 
             This field lists all id's that reflect "past versions" of the current PCF. 
             This is typically an automatically generated field of unique identifiers, 
-            maintained by the technology solution.        
+            maintained by the technology solution.
           type: array
           items:
             type: string
             format: uuid
           minItems: 1
           uniqueItems: true
+          examples:
+          - ["f4b1225a-bd44-4c8e-861d-079e4e1dfd69","079e425a-464f-528d-341d-4a944a1dfd70"]
         version:
           description: >
             The version number of the PCF; for example starting with 1 and incrementing.
@@ -240,6 +247,9 @@ components:
           format: int32
           maximum: 2147483647
           minimum: 0
+          examples:
+          - 1
+          - 3303
         created:
           description: >
             The date and time when the PCF was created. This is typically an automatically 
@@ -320,7 +330,7 @@ components:
           description: >
             The UN Central Product Classification Code (CPC) for the given product. The relevant 
             CPC code may be identified here https://unstats.un.org/unsd/classifications/Econ/cpc 
-            Given feedback this code is not commonly used, this attribute will become optional in v3
+            Advisement: This property will become optional in v3
           $ref: '#/components/schemas/NonEmptyString'
         productNameCompany:
           description: >
@@ -332,6 +342,7 @@ components:
             contains product-level information, comment should be used for information and instructions 
             related to the calculation of the PCF, or other information which informs the ability to interpret
             (e.g. LUC not included as unable to calculate LUC), to audit or to verify the PCF          
+            Advisement: This property will become OPTIONAL in version 3 of the Technical Specifications.
           type: string
         pcf:
           $ref: '#/components/schemas/CarbonFootprint'
@@ -458,6 +469,7 @@ components:
             umber can be used to track the age and accuracy of the GWP values used in 
             reporting. This field indicates the IPCC version of the GWP characterization 
             factors used in the calculation of the PCF.
+            Advisement: This property is DEPRECATED and only kept to ensure backwards-compatibility. It will be removed in version 3 of these Technical Specifications. It does not replace the (also mandatory) property <{CarbonFootprint/ipccCharacterizationFactorsSources}>.
           deprecated: true
           type: string
           enum:
@@ -510,6 +522,7 @@ components:
             in the PCF (e.g. electricity consumption for manufacturing), especially those 
             that significantly contribute manufacturing steps of the product (including 
             general description of used technologies).
+            Advisement: This property will become OPTIONAL in version 3 of the Technical Specifications.
           type: string
         referencePeriodStart:
           description: >
@@ -599,11 +612,13 @@ components:
             with the Framework (a maximum of 5% of the cradle to gate PCF emissions 
             may be excluded) as well as any relevant sector specific guidelines 
             referring to exemption rules/cut-off criteria.
+            Advisement: The upper boundary of this property (currently `5`) will be removed in version 3 of the Technical Specifications.
           $ref: '#/components/schemas/Percent'
           maximum: 5
         exemptedEmissionsDescription:
           description: >
             If emissions exempted, rationale behind exclusion of specific PCF emissions.
+          Advisement: This property will become OPTIONAL in version 3 of the Technical Specifications.
           type: string
         packagingEmissionsIncluded:
           description: >
@@ -733,35 +748,40 @@ components:
             (Framework Table 9), scoring the technological representativeness of the 
             sources used for PCF calculation based on weighted average of all inputs 
             representing >5% of PCF emissions.
-          $ref: '#/components/schemas/PositiveNonZeroDecimal'
+          $ref: '#/components/schemas/FloatBetween1And3'
         temporalDQR:
           description: >
             Quantitative data quality rating (DQR) based on the data quality matrix 
             (Framework Table 9), scoring the temporal representativeness of the sources 
             used for PCF calculation based on weighted average of all inputs 
             representing >5% of PCF emissions.
-          $ref: '#/components/schemas/PositiveNonZeroDecimal'
+          $ref: '#/components/schemas/FloatBetween1And3'
         geographicalDQR:
           description: >
             Quantitative data quality rating (DQR) based on the data quality matrix 
             (Framework Table 9), scoring the geographical representativeness of the 
             sources used for PCF calculation based on weighted average of all inputs 
             representing >5% of PCF emissions.
-          $ref: '#/components/schemas/PositiveNonZeroDecimal'
+          $ref: '#/components/schemas/FloatBetween1And3'
         completenessDQR:
           description: >
             Quantitative data quality rating (DQR) based on the data quality matrix 
             (Framework Table 9), scoring the completeness of the data collected for 
             PCF calculation based on weighted average of all inputs representing 
             >5% of PCF emissions.
-          $ref: '#/components/schemas/PositiveNonZeroDecimal'
+          $ref: '#/components/schemas/FloatBetween1And3'
         reliabilityDQR:
           description: >
             Quantitative data quality rating (DQR) based on the data quality matrix 
             (Framework Table 9), scoring the reliability of the data collected for 
             PCF calculation based on weighted average of all inputs representing 
             >5% of PCF emissions.
-          $ref: '#/components/schemas/PositiveNonZeroDecimal'
+          $ref: '#/components/schemas/FloatBetween1And3'
+    FloatBetween1And3:
+      type: number
+      format: float
+      maximum: 3
+      minimum: 1
     Assurance:
       description: Data Type "Assurance" of Spec Version 2
       title: Assurance
@@ -802,6 +822,7 @@ components:
         providerName:
           description: >
             Name of the independent third party engaged to undertake assurance
+            Advisement: Given this property was incorrectly and unintentionally published in V2 of the Technical Specifications as Mandatory, it will be reverted to Optional in version 3 of the Technical Specifications.
           type: string
         completedAt:
           description: >
