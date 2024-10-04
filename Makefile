@@ -7,6 +7,7 @@ clean:
 
 build:
 	mkdir -p $(OUTDIR)
+	python3 tools/generate-excel.py pact-openapi-2.1.0.yaml
 	python3 tools/generate-excel.py pact-openapi-2.2.0.yaml
 	python3 tools/generate-excel.py pact-openapi-2.3.0.yaml 
 	echo '<html>' > index.html
@@ -18,8 +19,8 @@ build:
 	echo '<a>PACT OpenAPI 2.0.0</a><br/>' >> index.html
 	echo '<a>PACT Simplified Model 2.0.0 (Excel)</a>' >> index.html
 	echo '<h2>2.1.0</h2>' >> index.html
-	echo '<a>PACT OpenAPI 2.1.0</a><br/>' >> index.html
-	echo '<a>PACT Simplified Model 2.1.0 (Excel)</a>' >> index.html
+	echo '<a href='pact-openapi-2.1.0.yaml'>PACT OpenAPI 2.1.0</a><br/>' >> index.html
+	echo '<a href='pact-simplified-model-2.1.0.xlsx'>PACT Simplified Model 2.1.0 (Excel)</a>' >> index.html
 	echo '<h2>2.2.0</h2>' >> index.html
 	echo '<a href='pact-openapi-2.2.0.yaml'>PACT OpenAPI 2.2.0</a><br/>' >> index.html
 	echo '<a href='pact-simplified-model-2.2.0.xlsx'>PACT Simplified Model 2.2.0 (Excel)</a>' >> index.html
