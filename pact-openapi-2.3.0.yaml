@@ -380,13 +380,12 @@ components:
       - fossilCarbonContent
       - biogenicCarbonContent
       - characterizationFactors
-      - ipccCharacterizationFactors
+      - ipccCharacterizationFactorsSources
       - crossSectoralStandardsUsed
       - boundaryProcessesDescription
       - exemptedEmissionsPercent
       - exemptedEmissionsDescription
       - packagingEmissionsIncluded
-      - productOrSectorSpecificRules
       oneOf:
       - oneOf:
         - required:
@@ -505,7 +504,7 @@ components:
           enum:
             - AR6
             - AR5
-        ipccCharacterizationFactors:
+        ipccCharacterizationFactorsSources:
           description: >              
             "The IPCC (Intergovernmental Panel of Climate Change) frequently releases (GWP) 
             global warming potential values for climate gases related to CO2. These GWP 

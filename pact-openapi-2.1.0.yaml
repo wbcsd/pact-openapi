@@ -375,7 +375,6 @@ components:
       - exemptedEmissionsPercent
       - exemptedEmissionsDescription
       - packagingEmissionsIncluded
-      - productOrSectorSpecificRules
       properties:
         declaredUnit:
           description: >
