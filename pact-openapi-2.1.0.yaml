@@ -13,8 +13,11 @@ info:
     maintained by the WBCSD PACT project and  intended to be used by organizations 
     that wish to exchange PCF data with other organizations. The specifications 
     are designed to be technology-agnostic. 
+servers: 
+- url: https://dev.carbon-transparency.org/api
+  description: Development server
 paths:
-  /footprints:
+  /2/footprints:
     get:
       summary: Action ListFootprints
       description: >
@@ -81,7 +84,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       security:
       - BearerAuth: []
-  /footprints/{id}:
+  /2/footprints/{id}:
     get:
       summary: Action GetFootprint
       description: ^
@@ -140,7 +143,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       security:
       - BearerAuth: []
-  /events:
+  /2/events:
     post:
       summary: Action Event
       description: >
