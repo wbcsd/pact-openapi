@@ -10,9 +10,9 @@ info:
   description: >
     This document describes the technical specifications for the exchange of 
     Product Carbon Footprint (PCF) data between systems. The specification is 
-    maintained by the WBCSD PACT project and  intended to be used by organizations 
+    maintained by the WBCSD PACT project and intended to be used by organizations 
     that wish to exchange PCF data with other organizations. The specifications 
-    are designed to be technology-agnostic. 
+    are designed to be technology-agnostic.
 paths:
   /footprints:
     get:
@@ -374,7 +374,6 @@ components:
       - exemptedEmissionsPercent
       - exemptedEmissionsDescription
       - packagingEmissionsIncluded
-      - productOrSectorSpecificRules
       properties:
         declaredUnit:
           description: >
