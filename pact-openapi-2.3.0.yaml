@@ -13,6 +13,11 @@ info:
     maintained by the WBCSD PACT project and intended to be used by organizations 
     that wish to exchange PCF data with other organizations. The specifications 
     are designed to be technology-agnostic.
+tags:
+- name: footprint
+  description: Synchronous retrieval of footprints
+- name: event
+  description: Asynchronous exchange of footprints
 servers: 
 - url: https://dev.wbcsd.org/pact/2
   description: Development server
@@ -149,6 +154,7 @@ paths:
         Post an event to the system. The event will be processed by the system 
         and may trigger further actions.
       operationId: post_event
+      tags: [event]
       requestBody:
         content:
           application/json:
