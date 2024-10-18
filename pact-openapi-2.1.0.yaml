@@ -14,8 +14,7 @@ info:
     that wish to exchange PCF data with other organizations. The specifications 
     are designed to be technology-agnostic. 
 servers: 
-- url: https://dev.carbon-transparency.org/api
-  description: Development server
+- url: https://example.com
 paths:
   /2/footprints:
     get:
