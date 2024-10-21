@@ -18,8 +18,10 @@ tags:
   description: Synchronous retrieval of footprints
 - name: event
   description: Asynchronous exchange of footprints
+servers: 
+- url: https://example.com
 paths:
-  /footprints:
+  /2/footprints:
     get:
       summary: Action ListFootprints
       description: >
@@ -86,7 +88,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       security:
       - BearerAuth: []
-  /footprints/{id}:
+  /2/footprints/{id}:
     get:
       summary: Action GetFootprint
       description: ^
@@ -145,7 +147,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
       security:
       - BearerAuth: []
-  /events:
+  /2/events:
     post:
       summary: Action Event
       description: >
