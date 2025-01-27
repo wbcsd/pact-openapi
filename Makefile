@@ -7,9 +7,10 @@ clean:
 
 build:
 	mkdir -p $(OUTDIR)
-	python3 tools/generate-excel.py pact-openapi-2.1.0.yaml
-	python3 tools/generate-excel.py pact-openapi-2.2.0.yaml
-	python3 tools/generate-excel.py pact-openapi-2.3.0.yaml 
+	python3 tools/generate-excel.py pact-openapi-2.1.0.yaml release
+	python3 tools/generate-excel.py pact-openapi-2.2.0.yaml release
+	python3 tools/generate-excel.py pact-openapi-2.3.0.yaml release
+	python3 tools/generate-excel.py pact-openapi-3.0.0.yaml draft
 	echo '<html>' > index.html
 	echo '<head><style>body { font-family: sans-serif; color: black; margin: 1em; } h1,h2,h3,a { color: rgb(0, 90, 156); } a:not([href]) { color: darkgray; }] </style></head><body>' >> index.html
 	echo '<h1>PACT OpenAPI Schema</h1>' >> index.html
@@ -27,6 +28,9 @@ build:
 	echo '<h2>2.3.0</h2>' >> index.html
 	echo '<a href='pact-openapi-2.3.0.yaml'>PACT OpenAPI 2.3.0</a><br/>' >> index.html
 	echo '<a href='pact-simplified-model-2.3.0.xlsx'>PACT Simplified Model 2.3.0 (Excel)</a>' >> index.html
+	echo '<h2>3.0.0</h2>' >> index.html
+	echo '<a href='pact-openapi-3.0.0.yaml'>PACT OpenAPI 3.0.0</a><br/>' >> index.html
+	echo '<a href='pact-simplified-model-3.0.0.xlsx'>PACT Simplified Model 3.0.0 (Excel)</a>' >> index.html
 	echo '</body></html>' >> index.html
 	cp *.yaml $(OUTDIR)
 	mv *.xlsx $(OUTDIR)

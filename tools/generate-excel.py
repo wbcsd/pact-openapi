@@ -9,7 +9,8 @@ from openpyxl.styles import Alignment,PatternFill,Font
 # openpyxl = "openpyxl==3.1.5"
 # jsonref = "jsonref==1.1.0"
 # pyyaml = "pyyaml==6.0.2
-# 
+
+status = " (DRAFT)"
 
 def export_to_excel(ws, schema, types):
 
@@ -36,7 +37,7 @@ def export_to_excel(ws, schema, types):
                 cell.fill = fill            
 
     # Append the title and header rows
-    ws.append(["PACT Simplified Tech Specs", "", "", "", "", "", "", "", "", "", ""])
+    ws.append(["PACT Simplified Tech Specs" + status, "", "", "", "", "", "", "", "", "", ""])
     ws.append([schema["info"]["version"], "", "", "", "", "", "", "", "", ""])
     ws.append([
         "Property",                     # Column A
@@ -164,21 +165,22 @@ def export_to_excel(ws, schema, types):
     for cell in ws["G"]:
         cell.alignment = Alignment(wrap_text=True, vertical="top")
 
-# check if not debugging:
-if False:
-    # input_path = "pact-openapi-2.2.1-wip.yaml"
-    input_path = "pact-openapi-2.2.0.yaml"
-else:
-    if len(sys.argv) < 2:
-        print("Usage: python3 generate-excel.py <input-path>")
-        print("This script generates an Excel file from a OpenAPI schema.")
-        print("")
-        print("Example:")
-        print("python3 generate-excel pact-openapi-2.2.1-wip.yaml")
-        print()
-        exit()
-    input_path = sys.argv[1]
-
+# Get command line args
+if len(sys.argv) < 2:
+    print("Usage: python3 generate-excel.py <input-path>")
+    print("This script generates an Excel file from a OpenAPI schema.")
+    print("")
+    print("Example:")
+    print("python3 generate-excel pact-openapi-2.2.1-wip.yaml")
+    print()
+    exit()
+input_path = sys.argv[1]
+if not os.path.exists(input_path):
+    print("File not found:", input_path)
+    exit()
+status = " (DRAFT)"
+if (len(sys.argv) >= 3):
+    status = " (" + sys.argv[2].upper() + ")"
     
 # Load the schema from the file
 with open(input_path) as file:
