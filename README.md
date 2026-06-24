@@ -1,5 +1,9 @@
 # PACT Network OpenAPI Schema Definitions
 
+**IMPORTANT** This repository is now **OBSOLETE**, as the OpenAPI definitions for PACT are now integral part of the [PACT Technical Specification](https://github.com/wbcsd/data-exchange-protocol) 
+
+---
+
 This repository contains the [OpenAPI](https://www.openapis.org) schemas for the 
 [Technical specifications for the PACT Network](https://github.com/wbcsd/data-exchange-protocol).
 
